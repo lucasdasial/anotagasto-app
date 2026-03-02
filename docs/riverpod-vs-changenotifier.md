@@ -115,11 +115,30 @@ final vm = LoginViewModel(repository: MockAuthRepository());
 
 Funciona, mas exige que a classe seja projetada para isso desde o início.
 
+### 4. Injeção de dependências exige uma lib extra
+
+O `Provider` não tem um mecanismo nativo para registrar e resolver dependências encadeadas. Em projetos maiores, é comum recorrer ao `get_it` para preencher essa lacuna:
+
+```dart
+// get_it registra as dependências na inicialização do app
+GetIt.I.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
+GetIt.I.registerFactory<LoginViewModel>(
+  () => LoginViewModel(GetIt.I<AuthRepository>()),
+);
+
+// Provider usa o get_it para criar a ViewModel com as dependências já resolvidas
+ChangeNotifierProvider<LoginViewModel>(
+  create: (_) => GetIt.I<LoginViewModel>(),
+)
+```
+
+Funciona, mas significa adicionar e aprender mais uma biblioteca — cada uma com seu ciclo de vida e configuração próprios.
+
 ---
 
 ## Riverpod: as mesmas ideias, melhor executadas
 
-O Riverpod foi criado pelo mesmo autor do `Provider` (Remi Rousselet) justamente para resolver essas limitações. A mudança fundamental é que os providers **vivem fora da árvore de widgets** — eles são objetos globais e seguros por tipo.
+O Riverpod foi criado pelo mesmo autor do `Provider` (Remi Rousselet) justamente para resolver essas limitações. A mudança fundamental é que os providers **vivem fora da árvore de widgets** — eles são objetos globais e seguros por tipo. E por ter injeção de dependências embutida, **elimina a necessidade do `get_it`** — tudo fica em um único lugar, com um único ciclo de vida.
 
 ### ProviderScope no lugar de ChangeNotifierProvider
 
@@ -137,6 +156,21 @@ class App extends StatelessWidget {
   }
 }
 ```
+
+### Injeção de dependências nativa
+
+Com Riverpod, providers podem depender de outros providers diretamente via `ref` — sem precisar do `get_it`:
+
+```dart
+final authRepositoryProvider = Provider((_) => AuthRepositoryImpl());
+
+final loginViewModelProvider = NotifierProvider<LoginViewModel, LoginState>(() {
+  final repository = ref.watch(authRepositoryProvider); // ← injeção nativa
+  return LoginViewModel(repository);
+});
+```
+
+O Riverpod resolve a dependência automaticamente, garante a ordem de inicialização e gerencia o ciclo de vida de cada provider.
 
 ### Notifier no lugar de ChangeNotifier
 
@@ -311,6 +345,7 @@ final container = ProviderContainer(
 | Múltiplos estados      | campos separados ou `ValueNotifier` | `copyWith` em classe de estado |
 | Testes                 | instância direta + `addListener`    | `ProviderContainer`            |
 | Mock de dependências   | injeção via construtor              | `overrides`                    |
+| Injeção de dependências | `get_it` ou manual                 | nativa via `ref`               |
 
 ---
 
