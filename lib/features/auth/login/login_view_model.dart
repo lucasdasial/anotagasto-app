@@ -1,16 +1,39 @@
 import 'package:anotagasto/core/ui_state.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoginViewModel extends ChangeNotifier {
-  UiState<String> _state = Initial();
-  UiState<String> get state => _state;
+class LoginState {
+  UiState<String> uiState;
+  bool rememberMe;
+
+  LoginState({this.uiState = const Initial(), this.rememberMe = false});
+
+  LoginState copyWith({UiState<String>? uiState, bool? rememberMe}) =>
+      LoginState(
+        uiState: uiState ?? this.uiState,
+        rememberMe: rememberMe ?? this.rememberMe,
+      );
+}
+
+class LoginViewModel extends Notifier<LoginState> {
+  @override
+  LoginState build() => LoginState();
+
+  void setRememberMe(bool value) {
+    state = state.copyWith(rememberMe: value);
+  }
 
   Future<void> login() async {
-    _state = Loading();
-    notifyListeners();
+    state = state.copyWith(uiState: Loading());
 
     await Future.delayed(Duration(seconds: 4));
-    _state = Success("xpto_token");
-    notifyListeners();
+    state = state.copyWith(uiState: Success("xpto_token"));
+  }
+
+  void logout() {
+    state = state.copyWith(uiState: Initial());
   }
 }
+
+final loginViewModelProvider = NotifierProvider<LoginViewModel, LoginState>(
+  LoginViewModel.new,
+);
