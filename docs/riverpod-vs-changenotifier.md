@@ -12,6 +12,14 @@ Essa separação tem um benefício direto: a ViewModel pode ser testada de forma
 
 ---
 
+## Pré-requisito: UiState com sealed classes
+
+Todos os exemplos deste artigo utilizam o padrão `UiState` — uma forma de representar os estados de uma tela (inicial, carregando, sucesso, erro) usando sealed classes do Dart 3, garantindo exclusividade de estado e verificação em compile time.
+
+Se você ainda não conhece o padrão, recomendo ler primeiro: [Representando estados da UI com sealed classes no Dart](./ui-state-sealed-classes.md)
+
+---
+
 ## O problema: UI que reage a dados
 
 Imagine uma tela de login. Ela precisa mostrar um botão no estado inicial, um loading enquanto autentica, e uma mensagem de sucesso ou erro ao finalizar. Precisamos de uma forma de representar esses estados e notificar a UI quando eles mudam.
@@ -351,7 +359,7 @@ final container = ProviderContainer(
 
 ## Por onde começar?
 
-Se você é iniciante, recomendo que com a ferramentas oficias do flutter, comece pelo **ChangeNotifier + Provider**.
+Se você é iniciante, comece pelo **ChangeNotifier + Provider**.
 
 - **Menos conceitos de uma vez** — você aprende reatividade, ViewModel e separação de responsabilidades sem precisar entender `Notifier`, `ProviderContainer`, `ref.watch` vs `ref.read` e `overrides` ao mesmo tempo
 - **Mais próximo do Flutter puro** — `ChangeNotifier` é do próprio Flutter, então você entende o mecanismo antes de usar uma abstração em cima
@@ -377,3 +385,13 @@ Pular direto pro Riverpod é possível, mas você corre o risco de usar sem ente
 O `ChangeNotifier` + `Provider` é uma solução sólida e suficiente para projetos menores. Ele é simples de entender e está bem documentado. Mas conforme o projeto cresce, suas limitações — rebuilds desnecessários, acoplamento com a árvore de widgets, dificuldade de testar com dependências — começam a pesar.
 
 O Riverpod não substitui os conceitos, ele os refina. O `UiState` como sealed class, a ViewModel separada da View, o estado imutável com `copyWith` — tudo isso continua igual. O que muda é a infraestrutura ao redor: mais previsível, mais testável e com controle fino de rebuilds sem boilerplate extra.
+
+---
+
+## Referências
+
+- [Representando estados da UI com sealed classes no Dart](./ui-state-sealed-classes.md)
+- [Documentação oficial do Riverpod](https://riverpod.dev)
+- [Documentação oficial do Provider](https://pub.dev/packages/provider)
+- [Sealed classes no Dart](https://dart.dev/language/class-modifiers#sealed)
+- [Dart patterns e pattern matching](https://dart.dev/language/patterns)
