@@ -1,20 +1,7 @@
 import 'package:anotagasto/core/ui_state.dart';
+import 'package:anotagasto/features/auth/login/login_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-class LoginViewModel extends ChangeNotifier {
-  UiState _state = Initial();
-  UiState get state => _state;
-
-  Future<void> login() async {
-    _state = Loading();
-    notifyListeners();
-
-    await Future.delayed(Duration(seconds: 4));
-    _state = Success("xpto_token");
-    notifyListeners();
-  }
-}
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -27,19 +14,17 @@ class LoginPage extends StatelessWidget {
         create: (_) => LoginViewModel(),
         child: Consumer<LoginViewModel>(
           builder: (context, viewModel, child) {
-            if (viewModel.state is Loading) {
-              return Center(child: CircularProgressIndicator());
-            }
-
-            if (viewModel.state is Success) {
-              return Center(child: Text("Logado!"));
-            }
-
             return Center(
-              child: FilledButton(
-                onPressed: viewModel.login,
-                child: Text("Entrar"),
-              ),
+              child: switch (viewModel.state) {
+                Initial() => FilledButton(
+                  onPressed: viewModel.login,
+                  child: Text("Entrar"),
+                ),
+                Loading() => CircularProgressIndicator(),
+                Success(:final data) => Text("Logado: $data"),
+                Error(:final message) => Text("Erro: $message"),
+                _ => SizedBox.shrink(),
+              },
             );
           },
         ),
