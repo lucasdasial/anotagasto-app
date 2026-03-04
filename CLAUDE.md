@@ -128,7 +128,14 @@ All shared JSON models live in `lib/core/models/`. `ExpenseModel.value` is store
 `AppTheme.light` in `lib/core/theme/app_theme.dart` — Material3 light theme. Use `AppColors` and `AppTextStyles` constants rather than hardcoding styles. `AppColors.chartPalette` provides one color per category (ordered to match `ExpenseCategory.values`).
 
 ### Responsive layout
-Wrap content with `MaxWidthContainer` (max 1080 px) for web compatibility.
+The app runs on **both mobile and web browser** — every screen must be responsive.
+
+- Authenticated screens are wrapped with `AppShell` (`lib/core/widgets/app_shell.dart`), which constrains content to **max 1280 px** and handles the auth guard
+- Use `MediaQuery.of(context).size.width` or `LayoutBuilder` to adapt layouts between mobile and wide viewports
+- Avoid fixed pixel widths on interactive elements — prefer `double.infinity` with a max constraint from the parent
+- `BouncingScrollPhysics` pull-to-add does **not** work on Flutter web; use a FAB as the add action on web (`kIsWeb`)
+- Breakpoints are defined in `Constants` (`lib/core/utils/constants.dart`): `breakpointMobile = 390`, `breakpointDesktop = 1280`
+- Test layouts at both breakpoints
 
 ### Utilities
 - `CurrencyFormatter.format(num cents)` — recebe **centavos** e retorna BRL (`1000 → R$ 10,00`)

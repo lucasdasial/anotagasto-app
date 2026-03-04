@@ -1,3 +1,4 @@
+import 'package:anotagasto_app/app/routes.dart';
 import 'package:anotagasto_app/core/utils/phone_formatter.dart';
 import 'package:anotagasto_app/core/view_state.dart';
 import 'package:anotagasto_app/core/widgets/app_snack_bar.dart';
@@ -39,7 +40,7 @@ class _LoginViewState extends State<LoginView> {
     final state = context.read<LoginViewModel>().viewState;
 
     if (state is SuccessStateView) {
-      Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.of(context).pushReplacementNamed(Routes.expenseList.name);
     }
 
     if (state is ErrorStateView) {
