@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:anotagasto_app/core/theme/app_colors.dart';
 import 'package:anotagasto_app/core/theme/app_text_styles.dart';
+import 'package:anotagasto_app/core/utils/constants.dart';
 import 'package:flutter/material.dart';
 
 class AuthShell extends StatelessWidget {
@@ -23,7 +24,7 @@ class AuthShell extends StatelessWidget {
                   vertical: 32,
                 ),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
+                  constraints: BoxConstraints(maxWidth: Constants.maxWidthForm),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [

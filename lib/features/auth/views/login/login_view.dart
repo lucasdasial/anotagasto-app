@@ -7,41 +7,67 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-class LoginView extends StatelessWidget {
+class LoginView extends StatefulWidget {
+  const LoginView({super.key});
+
+  @override
+  State<LoginView> createState() => _LoginViewState();
+}
+
+class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
   final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
 
-  LoginView({super.key});
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LoginViewModel>().addListener(_onStateChange);
+    });
+  }
 
   @override
-  Widget build(BuildContext context) {
-    final state = context.watch<LoginViewModel>().viewState;
-    final vm = context.read<LoginViewModel>();
+  void dispose() {
+    context.read<LoginViewModel>().removeListener(_onStateChange);
+    _phoneCtrl.dispose();
+    _passCtrl.dispose();
+    super.dispose();
+  }
 
-    void submit(String phone, String pass) {
-      if (!_formKey.currentState!.validate()) return;
-      final digits = PhoneMaskFormatter.unmasked(phone);
-      vm.onSubmit(digits, pass);
-    }
+  void _onStateChange() {
+    final state = context.read<LoginViewModel>().viewState;
 
     if (state is SuccessStateLogin) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      });
+      Navigator.of(context).pushReplacementNamed('/home');
     }
 
     if (state is ErrorStateLogin) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.error,
-            content: Text(state.message),
-          ),
-        );
-        vm.resetViewState();
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          width: 400,
+
+          behavior: .floating,
+          backgroundColor: AppColors.error,
+
+          content: Text(state.message),
+        ),
+      );
+      context.read<LoginViewModel>().resetViewState();
     }
+  }
+
+  void _submit(String phone, String pass) {
+    if (!_formKey.currentState!.validate()) return;
+    final digits = PhoneMaskFormatter.unmasked(phone);
+    context.read<LoginViewModel>().onSubmit(digits, pass);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isLoading = context.select<LoginViewModel, bool>(
+      (vm) => vm.viewState is LoadingStateLogin,
+    );
 
     return Form(
       key: _formKey,
@@ -76,10 +102,10 @@ class LoginView extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: state is LoadingStateLogin
+            onPressed: isLoading
                 ? null
-                : () => submit(_phoneCtrl.text, _passCtrl.text),
-            child: state is LoadingStateLogin
+                : () => _submit(_phoneCtrl.text, _passCtrl.text),
+            child: isLoading
                 ? const SizedBox(
                     width: 20,
                     height: 20,

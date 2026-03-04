@@ -26,6 +26,11 @@ class LoginViewModel extends ChangeNotifier {
       viewState = SuccessStateLogin(response);
     } on DioException catch (e) {
       viewState = ErrorStateLogin(e.response?.data["error"] ?? e.message);
+    } catch (e, stack) {
+      debugPrint('🐛 LoginViewModel.onSubmit: $e\n$stack');
+      viewState = ErrorStateLogin(
+        'Ocorreu um erro inesperado. Tente novamente.',
+      );
     }
 
     notifyListeners();

@@ -22,6 +22,7 @@ void main() async {
     },
     (error, stack) {
       inspect(error);
+      inspect(stack);
       SnackBar(content: Text(error.toString()));
     },
   );

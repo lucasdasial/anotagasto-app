@@ -5,27 +5,28 @@ class HttpErrorHandler extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     final status = err.response?.statusCode;
 
-    if (err.type == DioExceptionType.connectionTimeout) {
+    if (err.type == DioExceptionType.connectionTimeout ||
+        err.type == DioExceptionType.receiveTimeout ||
+        err.type == DioExceptionType.sendTimeout) {
       return handler.reject(
-        DioException(
-          requestOptions: err.requestOptions,
-          message: "Tempo de conexão esgotado",
-        ),
+        err.copyWith(message: 'Tempo de conexão esgotado'),
       );
     }
 
-    if (status == 401) {
-      err = err.copyWith(message: "Não autorizado");
-    } else if (status == 403) {
-      err = err.copyWith(message: "Acesso proibido");
-    } else if (status == 404) {
-      err = err.copyWith(message: "Recurso não encontrado");
-    } else if (status != null && status >= 500) {
-      err = err.copyWith(message: "Erro no servidor");
-    } else {
-      err = err.copyWith(message: "Erro desconhecido");
+    if (err.type == DioExceptionType.connectionError ||
+        err.type == DioExceptionType.unknown) {
+      return handler.reject(
+        err.copyWith(message: 'Sem conexão com a internet'),
+      );
     }
 
-    return handler.next(err);
+    if (status != null && status >= 500) {
+      return handler.reject(
+        err.copyWith(message: 'Erro no servidor'),
+      );
+    }
+
+    // 4xx: passa com o body intacto para o ViewModel ler e.response?.data["error"]
+    handler.next(err);
   }
 }
