@@ -6,15 +6,20 @@ abstract final class CurrencyFormatter {
     name: 'BRL',
   );
 
-  static String format(num value) => _fmt.format(value);
+  /// Recebe centavos (int) e retorna string formatada em BRL.
+  /// Ex: 1000 → "R$ 10,00"
+  static String format(num cents) => _fmt.format(cents / 100);
 
+  /// Recebe string BRL e retorna centavos (int).
+  /// Ex: "R$ 10,00" → 1000
   static int? parse(String value) {
     try {
-      return _fmt.parse(value.replaceAll(' ', '')).toInt();
+      final reais = _fmt.parse(value.replaceAll(' ', '')).toDouble();
+      return (reais * 100).round();
     } catch (_) {
       final cleaned = value.replaceAll(RegExp(r'[^\d,.]'), '').replaceAll(',', '.');
       final d = double.tryParse(cleaned);
-      return d?.toInt();
+      return d != null ? (d * 100).round() : null;
     }
   }
 }

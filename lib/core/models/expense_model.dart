@@ -39,24 +39,6 @@ class ExpenseModel {
       'user_id': userId,
     };
   }
-
-  ExpenseModel copyWith({
-    String? id,
-    int? value,
-    String? description,
-    ExpenseCategory? category,
-    DateTime? date,
-    String? userId,
-  }) {
-    return ExpenseModel(
-      id: id ?? this.id,
-      value: value ?? this.value,
-      description: description ?? this.description,
-      category: category ?? this.category,
-      date: date ?? this.date,
-      userId: userId ?? this.userId,
-    );
-  }
 }
 
 class ExpenseListResult {

@@ -72,14 +72,26 @@ void dispose() {
 ```
 
 ### ViewState pattern
-Each feature uses a sealed class for state. Always include a `LoadingState`:
+All screens share the generic sealed class `ViewState` defined in `lib/core/view_state.dart`:
 
 ```dart
-sealed class LoginViewState {}
-class InitialStateLogin extends LoginViewState {}
-class LoadingStateLogin extends LoginViewState {}
-class SuccessStateLogin extends LoginViewState { final LoginResponseModel data; ... }
-class ErrorStateLogin extends LoginViewState { final String message; ... }
+sealed class ViewState {}
+class InitialStateView extends ViewState {}
+class LoadingStateView extends ViewState {}
+class ErrorStateView extends ViewState { final String message; ... }
+class SuccessStateView<T> extends ViewState { final T data; ... }
+```
+
+Each ViewModel declares `ViewState viewState = InitialStateView()` and uses pattern matching in the view:
+
+```dart
+// select para rebuilds mínimos
+final isLoading = context.select<MyViewModel, bool>((vm) => vm.viewState is LoadingStateView);
+
+// listener para side effects
+final state = context.read<MyViewModel>().viewState;
+if (state is SuccessStateView) { ... }
+if (state is ErrorStateView) { AppSnackBar.error(context, state.message); }
 ```
 
 ViewModels must catch both `DioException` (for HTTP errors) and generic `Exception` (for unexpected errors):
@@ -119,8 +131,8 @@ All shared JSON models live in `lib/core/models/`. `ExpenseModel.value` is store
 Wrap content with `MaxWidthContainer` (max 1080 px) for web compatibility.
 
 ### Utilities
-- `CurrencyFormatter.format(num)` — BRL (`R$ 1.234,56`)
-- `CurrencyFormatter.parse(String)` — returns int cents
+- `CurrencyFormatter.format(num cents)` — recebe **centavos** e retorna BRL (`1000 → R$ 10,00`)
+- `CurrencyFormatter.parse(String)` — retorna **centavos** (`"R$ 10,00" → 1000`)
 - `DateFormatter.toApiMonth(year, month)` → `"2024-03"` for API params
 - `Debouncer` — 400 ms default, call `.dispose()` in widget dispose
 - `AppSnackBar.error(context, msg)` / `.success(...)` / `.info(...)` — use instead of `ScaffoldMessenger` directly
@@ -128,11 +140,17 @@ Wrap content with `MaxWidthContainer` (max 1080 px) for web compatibility.
 ### Localization
 UI text and error messages are in **Portuguese (pt_BR)**. Confirm dialogs default to "Confirmar" / "Cancelar".
 
+## Testing conventions
+
+- **Test names are always in English** — clear, semantic, describing behavior not implementation.
+- Use the pattern `does X when Y` or a plain descriptive phrase: `returns null for non-numeric string`, `emits loading then success`, `saves token to storage on success`.
+- Never use Portuguese in test names.
+
 ## Key conventions
 
 - **Prefer `StatelessWidget` for views.** Use `StatefulWidget` only when strictly necessary (e.g. `TextEditingController` disposal or `addListener`/`removeListener` lifecycle). Justify the choice in a comment when `StatefulWidget` is unavoidable.
 - **Never call `di<T>()` inside ViewModels or widgets** — only in the `create` callback of `ChangeNotifierProvider` in `app.dart`.
-- Expense amounts are always **integers (cents)** in the model layer; format for display with `CurrencyFormatter`.
+- Expense amounts are always **integers (cents)** in the model layer; format for display with `CurrencyFormatter`. `1000 = R$ 10,00` — sempre divida por 100 ao exibir, multiplique por 100 ao salvar.
 - The `features/` directory follows a per-feature structure: `feature_name/` → `data/` (repositories, response models), widget files at the feature root. Sub-widgets go in `feature_name/widgets/`.
 - Reusable widgets go in `lib/core/widgets/`.
 - Add/edit expenses via a bottom sheet opened with `showGeneralDialog` + `BackdropFilter` blur.

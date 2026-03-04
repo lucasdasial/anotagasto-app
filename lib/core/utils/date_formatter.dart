@@ -2,8 +2,18 @@ import 'package:intl/intl.dart';
 
 abstract final class DateFormatter {
   static final List<String> _monthNames = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
   ];
 
   /// Returns "YYYY-MM" string for a given year + month.
@@ -22,11 +32,6 @@ abstract final class DateFormatter {
     return '${_monthNames[month - 1]} $year';
   }
 
-  static String currentMonth() {
-    final now = DateTime.now();
-    return toApiMonth(now.year, now.month);
-  }
-
   static String formatDate(DateTime date) {
     return DateFormat('dd/MM/yyyy').format(date);
   }
@@ -34,4 +39,12 @@ abstract final class DateFormatter {
   static String formatDateShort(DateTime date) {
     return DateFormat('dd/MM').format(date);
   }
+
+  // coverage:ignore-start
+  static String currentMonth() {
+    final now = DateTime.now();
+    return toApiMonth(now.year, now.month);
+  }
+
+  // coverage:ignore-end
 }

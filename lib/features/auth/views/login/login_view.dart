@@ -1,8 +1,8 @@
 import 'package:anotagasto_app/core/utils/phone_formatter.dart';
+import 'package:anotagasto_app/core/view_state.dart';
 import 'package:anotagasto_app/core/widgets/app_snack_bar.dart';
 import 'package:anotagasto_app/features/auth/views/login/login_view_model.dart';
 import 'package:anotagasto_app/features/auth/views/login/widgets/password_field.dart';
-import 'package:anotagasto_app/features/auth/views/login_view_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -38,11 +38,11 @@ class _LoginViewState extends State<LoginView> {
   void _onStateChange() {
     final state = context.read<LoginViewModel>().viewState;
 
-    if (state is SuccessStateLogin) {
+    if (state is SuccessStateView) {
       Navigator.of(context).pushReplacementNamed('/home');
     }
 
-    if (state is ErrorStateLogin) {
+    if (state is ErrorStateView) {
       AppSnackBar.error(context, state.message);
       context.read<LoginViewModel>().resetViewState();
     }
@@ -57,7 +57,7 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     final isLoading = context.select<LoginViewModel, bool>(
-      (vm) => vm.viewState is LoadingStateLogin,
+      (vm) => vm.viewState is LoadingStateView,
     );
 
     return Form(

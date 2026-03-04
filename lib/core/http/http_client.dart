@@ -1,3 +1,4 @@
+// coverage:ignore-file
 import 'package:anotagasto_app/core/config/envs.dart';
 import 'package:anotagasto_app/core/http/auth_interceptor.dart';
 import 'package:anotagasto_app/core/http/http_error_handler.dart';
