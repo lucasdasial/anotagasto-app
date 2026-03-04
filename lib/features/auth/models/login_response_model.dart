@@ -12,9 +12,7 @@ class LoginResponseModel {
     try {
       return LoginResponseModel(token: map['token'] as String);
     } catch (e) {
-      throw Exception(
-        "Error durante a serialização dos dados: ${e.toString()}",
-      );
+      throw Exception("Error durante a serialização dos dados");
     }
   }
 

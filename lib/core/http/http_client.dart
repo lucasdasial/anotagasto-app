@@ -1,11 +1,13 @@
 import 'package:anotagasto_app/core/config/envs.dart';
+import 'package:anotagasto_app/core/http/auth_interceptor.dart';
 import 'package:anotagasto_app/core/http/http_error_handler.dart';
+import 'package:anotagasto_app/core/storage/storage_service.dart';
 import 'package:dio/dio.dart';
 
 class HttpClient {
   late final Dio _dio;
 
-  HttpClient() {
+  HttpClient(StorageService storage) {
     _dio = Dio(
       BaseOptions(
         baseUrl: "${Envs.apiBaseUrl}/api",
@@ -14,7 +16,7 @@ class HttpClient {
       ),
     );
 
-    _dio.interceptors.add(HttpErrorHandler());
+    _dio.interceptors.addAll([AuthInterceptor(storage), HttpErrorHandler()]);
   }
 
   Future<Response> get(String path) => _dio.get(path);
