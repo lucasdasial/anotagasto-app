@@ -22,7 +22,7 @@ abstract final class AppColors {
   // --- Semantic ---
   static const Color success = Color(0xFF2E7D32);
   static const Color warning = Color(0xFFE65100);
-  static const Color error = Color(0xFFC62828);
+  static const Color error = Color.fromARGB(255, 182, 25, 25);
 
   // --- Chart palette (one color per category, ordered like ExpenseCategory enum) ---
   // grocery, eat_out, cleaning_products, health, medicines, housing,

@@ -1,5 +1,5 @@
-import 'package:anotagasto_app/core/theme/app_colors.dart';
 import 'package:anotagasto_app/core/utils/phone_formatter.dart';
+import 'package:anotagasto_app/core/widgets/app_snack_bar.dart';
 import 'package:anotagasto_app/features/auth/views/login/login_view_model.dart';
 import 'package:anotagasto_app/features/auth/views/login/widgets/password_field.dart';
 import 'package:anotagasto_app/features/auth/views/login_view_state.dart';
@@ -43,16 +43,7 @@ class _LoginViewState extends State<LoginView> {
     }
 
     if (state is ErrorStateLogin) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          width: 400,
-
-          behavior: .floating,
-          backgroundColor: AppColors.error,
-
-          content: Text(state.message),
-        ),
-      );
+      AppSnackBar.error(context, state.message);
       context.read<LoginViewModel>().resetViewState();
     }
   }
@@ -122,7 +113,7 @@ class _LoginViewState extends State<LoginView> {
             children: [
               const Text('Não tem conta? '),
               TextButton(
-                onPressed: () => Navigator.of(context).pushNamed('/register'),
+                onPressed: () => AppSnackBar.info(context, 'Em breve'),
                 child: const Text('Criar conta'),
               ),
             ],
