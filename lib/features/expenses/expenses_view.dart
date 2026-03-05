@@ -8,6 +8,9 @@ import 'package:anotagasto_app/core/view_state.dart';
 import 'package:anotagasto_app/core/widgets/category_chip.dart';
 import 'package:anotagasto_app/core/widgets/error_banner.dart';
 import 'package:anotagasto_app/features/expenses/expenses_view_model.dart';
+import 'package:anotagasto_app/features/expenses/widgets/add_expense_sheet.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,12 +22,22 @@ class ExpensesView extends StatefulWidget {
 }
 
 class _ExpensesViewState extends State<ExpensesView> {
-  // StatefulWidget needed for initState to trigger initial data load.
+  // StatefulWidget needed for initState (data load) and _sheetOpening guard.
+  bool _sheetOpening = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ExpensesViewModel>().getExpenseList();
+    });
+  }
+
+  void _openSheet() {
+    if (_sheetOpening) return;
+    _sheetOpening = true;
+    showAddExpenseSheet(context).then((_) {
+      if (mounted) _sheetOpening = false;
     });
   }
 
@@ -61,6 +74,7 @@ class _ExpensesViewState extends State<ExpensesView> {
             data: viewState.data,
             hPadding: hPadding,
             isDesktop: isDesktop,
+            onAddExpense: _openSheet,
           );
         }
 
@@ -74,16 +88,19 @@ class _ExpenseListBody extends StatelessWidget {
   final ExpenseListModel data;
   final double hPadding;
   final bool isDesktop;
+  final VoidCallback onAddExpense;
 
   const _ExpenseListBody({
     required this.data,
     required this.hPadding,
     required this.isDesktop,
+    required this.onAddExpense,
   });
 
   @override
   Widget build(BuildContext context) {
-    final selectedCategories = context.select<ExpensesViewModel, Set<ExpenseCategory>>(
+    final selectedCategories =
+        context.select<ExpensesViewModel, Set<ExpenseCategory>>(
       (vm) => vm.selectedCategories,
     );
 
@@ -99,7 +116,7 @@ class _ExpenseListBody extends StatelessWidget {
             .where((e) => selectedCategories.contains(e.category))
             .toList();
 
-    return Column(
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Header(
@@ -122,11 +139,35 @@ class _ExpenseListBody extends StatelessWidget {
                   ),
                 )
               : isDesktop
-              ? _DesktopGrid(expenses: filtered, hPadding: hPadding)
-              : _MobileList(expenses: filtered, hPadding: hPadding),
+                  ? _DesktopGrid(expenses: filtered, hPadding: hPadding)
+                  : _MobileList(
+                      expenses: filtered,
+                      hPadding: hPadding,
+                      onAddExpense: onAddExpense,
+                    ),
         ),
       ],
     );
+
+    if (kIsWeb || isDesktop) {
+      return Stack(
+        children: [
+          content,
+          Positioned(
+            right: hPadding,
+            bottom: 24,
+            child: FloatingActionButton(
+              onPressed: onAddExpense,
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onAccent,
+              child: const Icon(Icons.add),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return content;
   }
 }
 
@@ -145,20 +186,28 @@ class _CategoryFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: hPadding),
-        itemCount: categories.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (_, index) {
-          final category = categories[index];
-          return CategoryChip(
-            category: category,
-            selected: selected.contains(category),
-            onTap: () =>
-                context.read<ExpensesViewModel>().toggleCategory(category),
-          );
-        },
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          dragDevices: {
+            PointerDeviceKind.touch,
+            PointerDeviceKind.mouse,
+          },
+        ),
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.symmetric(horizontal: hPadding),
+          itemCount: categories.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 8),
+          itemBuilder: (_, index) {
+            final category = categories[index];
+            return CategoryChip(
+              category: category,
+              selected: selected.contains(category),
+              onTap: () =>
+                  context.read<ExpensesViewModel>().toggleCategory(category),
+            );
+          },
+        ),
       ),
     );
   }
@@ -178,26 +227,27 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(hPadding, isDesktop ? 32 : 20, hPadding, 16),
+      padding: EdgeInsets.fromLTRB(
+          hPadding, isDesktop ? 32 : 20, hPadding, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Despesas',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-              fontSize: isDesktop ? null : 14,
-            ),
+                  color: AppColors.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                  fontSize: isDesktop ? null : 14,
+                ),
           ),
           const SizedBox(height: 4),
           Text(
             CurrencyFormatter.format(amountTotal),
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.onSurface,
-              fontSize: isDesktop ? null : 32,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.onSurface,
+                  fontSize: isDesktop ? null : 32,
+                ),
           ),
         ],
       ),
@@ -208,16 +258,30 @@ class _Header extends StatelessWidget {
 class _MobileList extends StatelessWidget {
   final List<ExpenseModel> expenses;
   final double hPadding;
+  final VoidCallback onAddExpense;
 
-  const _MobileList({required this.expenses, required this.hPadding});
+  const _MobileList({
+    required this.expenses,
+    required this.hPadding,
+    required this.onAddExpense,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: EdgeInsets.fromLTRB(hPadding, 8, hPadding, 24),
-      itemCount: expenses.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (_, index) => _ExpenseItem(expense: expenses[index]),
+    return NotificationListener<OverscrollNotification>(
+      onNotification: (notification) {
+        if (notification.overscroll < -60) onAddExpense();
+        return false;
+      },
+      child: ListView.separated(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        padding: EdgeInsets.fromLTRB(hPadding, 8, hPadding, 24),
+        itemCount: expenses.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 8),
+        itemBuilder: (_, index) => _ExpenseItem(expense: expenses[index]),
+      ),
     );
   }
 }
@@ -259,7 +323,8 @@ class _ExpenseItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CategoryChip(category: expense.category, compact: true, selected: true),
+          CategoryChip(
+              category: expense.category, compact: true, selected: true),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

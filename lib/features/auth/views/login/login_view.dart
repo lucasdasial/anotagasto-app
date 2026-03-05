@@ -74,6 +74,7 @@ class _LoginViewState extends State<LoginView> {
               PhoneMaskFormatter(),
             ],
             decoration: const InputDecoration(
+              fillColor: Colors.white,
               labelText: 'Telefone',
               hintText: '(11) 99999-9999',
               prefixIcon: Icon(Icons.phone_outlined),

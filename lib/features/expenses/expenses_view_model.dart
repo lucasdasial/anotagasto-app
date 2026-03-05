@@ -1,5 +1,6 @@
 import 'package:anotagasto_app/core/models/expense_category.dart';
 import 'package:anotagasto_app/core/models/expense_model.dart';
+import 'package:anotagasto_app/core/models/pagination_model.dart';
 import 'package:anotagasto_app/core/view_state.dart';
 import 'package:anotagasto_app/features/expenses/expense_repository.dart';
 import 'package:dio/dio.dart';
@@ -34,6 +35,36 @@ class ExpensesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Throws on error — caller (sheet) is responsible for handling.
+  Future<void> addExpense({
+    required int value,
+    required String description,
+    required ExpenseCategory category,
+  }) async {
+    final expense = await expenseRepository.createExpense(
+      value: value,
+      description: description,
+      category: category,
+    );
+
+    if (viewState is SuccessStateView<ExpenseListModel>) {
+      final current = (viewState as SuccessStateView<ExpenseListModel>).data;
+      viewState = SuccessStateView(
+        ExpenseListModel(
+          expenses: [expense, ...current.expenses],
+          amountTotal: current.amountTotal + expense.value,
+          pagination: PaginationModel(
+            page: current.pagination.page,
+            pageSize: current.pagination.pageSize,
+            total: current.pagination.total + 1,
+            totalPages: current.pagination.totalPages,
+          ),
+        ),
+      );
+      notifyListeners();
+    }
+  }
+
   void toggleCategory(ExpenseCategory category) {
     if (_selectedCategories.contains(category)) {
       _selectedCategories.remove(category);
@@ -47,6 +78,4 @@ class ExpensesViewModel extends ChangeNotifier {
     if (_selectedCategories.isEmpty) return all;
     return all.where((e) => _selectedCategories.contains(e.category)).toList();
   }
-
-  Future<void> addExpense() async {}
 }
