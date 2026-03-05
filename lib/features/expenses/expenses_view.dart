@@ -5,14 +5,45 @@ import 'package:anotagasto_app/core/utils/constants.dart';
 import 'package:anotagasto_app/core/utils/currency_formatter.dart';
 import 'package:anotagasto_app/core/utils/date_formatter.dart';
 import 'package:anotagasto_app/core/view_state.dart';
+import 'package:anotagasto_app/core/widgets/app_snack_bar.dart';
 import 'package:anotagasto_app/core/widgets/category_chip.dart';
+import 'package:anotagasto_app/core/widgets/confirm_dialog.dart';
 import 'package:anotagasto_app/core/widgets/error_banner.dart';
 import 'package:anotagasto_app/features/expenses/expenses_view_model.dart';
 import 'package:anotagasto_app/features/expenses/widgets/add_expense_sheet.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+Future<void> _confirmDelete(
+  BuildContext context,
+  ExpenseModel expense,
+) async {
+  final confirmed = await showConfirmDialog(
+    context,
+    title: 'Excluir despesa',
+    message: 'Deseja excluir "${expense.description}"?',
+    confirmLabel: 'Excluir',
+    destructive: true,
+  );
+  if (!confirmed || !context.mounted) return;
+  try {
+    await context.read<ExpensesViewModel>().deleteExpense(expense.id);
+  } on DioException catch (e) {
+    if (context.mounted) {
+      AppSnackBar.error(
+        context,
+        e.response?.data['error'] ?? 'Erro ao excluir.',
+      );
+    }
+  } catch (_) {
+    if (context.mounted) {
+      AppSnackBar.error(context, 'Ocorreu um erro inesperado. Tente novamente.');
+    }
+  }
+}
 
 class ExpensesView extends StatefulWidget {
   const ExpensesView({super.key});
@@ -133,9 +164,20 @@ class _ExpenseListBody extends StatelessWidget {
         Expanded(
           child: filtered.isEmpty
               ? Center(
-                  child: Text(
-                    'Nenhuma despesa encontrada.',
-                    style: TextStyle(color: AppColors.onSurfaceVariant),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.receipt_long_outlined,
+                        size: 56,
+                        color: AppColors.onSurfaceMuted,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Nenhuma despesa encontrada.',
+                        style: TextStyle(color: AppColors.onSurfaceVariant),
+                      ),
+                    ],
                   ),
                 )
               : isDesktop
@@ -280,7 +322,38 @@ class _MobileList extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(hPadding, 8, hPadding, 24),
         itemCount: expenses.length,
         separatorBuilder: (_, _) => const SizedBox(height: 8),
-        itemBuilder: (_, index) => _ExpenseItem(expense: expenses[index]),
+        itemBuilder: (_, index) {
+          final expense = expenses[index];
+          return Dismissible(
+            key: ValueKey(expense.id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              decoration: BoxDecoration(
+                color: AppColors.error,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.delete_outline, color: Colors.white),
+            ),
+            confirmDismiss: (_) => showConfirmDialog(
+              context,
+              title: 'Excluir despesa',
+              message: 'Deseja excluir "${expense.description}"?',
+              confirmLabel: 'Excluir',
+              destructive: true,
+            ),
+            onDismissed: (_) {
+              context.read<ExpensesViewModel>().deleteExpense(expense.id).catchError((_) {
+                if (context.mounted) {
+                  AppSnackBar.error(context, 'Erro ao excluir. Tente novamente.');
+                  context.read<ExpensesViewModel>().getExpenseList();
+                }
+              });
+            },
+            child: _ExpenseItem(expense: expense),
+          );
+        },
       ),
     );
   }
@@ -303,15 +376,19 @@ class _DesktopGrid extends StatelessWidget {
         mainAxisSpacing: 12,
       ),
       itemCount: expenses.length,
-      itemBuilder: (_, index) => _ExpenseItem(expense: expenses[index]),
+      itemBuilder: (_, index) => _ExpenseItem(
+        expense: expenses[index],
+        onDelete: () => _confirmDelete(context, expenses[index]),
+      ),
     );
   }
 }
 
 class _ExpenseItem extends StatelessWidget {
   final ExpenseModel expense;
+  final VoidCallback? onDelete;
 
-  const _ExpenseItem({required this.expense});
+  const _ExpenseItem({required this.expense, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -356,6 +433,17 @@ class _ExpenseItem extends StatelessWidget {
             CurrencyFormatter.format(expense.value),
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           ),
+          if (onDelete != null) ...[
+            const SizedBox(width: 4),
+            IconButton(
+              onPressed: onDelete,
+              icon: const Icon(Icons.delete_outline, size: 18),
+              color: AppColors.onSurfaceMuted,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
         ],
       ),
     );

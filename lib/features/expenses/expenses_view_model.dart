@@ -35,6 +35,29 @@ class ExpensesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Throws on error — caller is responsible for handling.
+  Future<void> deleteExpense(String id) async {
+    await expenseRepository.deleteExpense(id);
+
+    if (viewState is SuccessStateView<ExpenseListModel>) {
+      final current = (viewState as SuccessStateView<ExpenseListModel>).data;
+      final expense = current.expenses.firstWhere((e) => e.id == id);
+      viewState = SuccessStateView(
+        ExpenseListModel(
+          expenses: current.expenses.where((e) => e.id != id).toList(),
+          amountTotal: current.amountTotal - expense.value,
+          pagination: PaginationModel(
+            page: current.pagination.page,
+            pageSize: current.pagination.pageSize,
+            total: current.pagination.total - 1,
+            totalPages: current.pagination.totalPages,
+          ),
+        ),
+      );
+      notifyListeners();
+    }
+  }
+
   /// Throws on error — caller (sheet) is responsible for handling.
   Future<void> addExpense({
     required int value,

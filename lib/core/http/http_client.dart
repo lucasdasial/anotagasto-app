@@ -23,4 +23,5 @@ class HttpClient {
   Future<Response> get(String path) => _dio.get(path);
   Future<Response> post(String path, {Object? bodyParams}) =>
       _dio.post(path, data: bodyParams);
+  Future<Response> delete(String path) => _dio.delete(path);
 }

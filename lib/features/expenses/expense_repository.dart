@@ -14,6 +14,10 @@ class ExpenseRepository {
     return ExpenseListModel.fromMap(response.data);
   }
 
+  Future<void> deleteExpense(String id) async {
+    await _http.delete("/expenses/$id");
+  }
+
   Future<ExpenseModel> createExpense({
     required int value,
     required String description,

@@ -41,6 +41,12 @@ class ExpenseModel {
   }
 }
 
+int _parseInt(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  return int.tryParse(value.toString()) ?? 0;
+}
+
 class ExpenseListModel {
   final List<ExpenseModel> expenses;
   final int amountTotal;
@@ -56,7 +62,7 @@ class ExpenseListModel {
     final data = json['data'] as List? ?? [];
     final pagination = json['pagination'] as Map<String, dynamic>? ?? {};
     return ExpenseListModel(
-      amountTotal: json["amount_total"] as int? ?? 0,
+      amountTotal: _parseInt(json["amount_total"]),
       expenses: data
           .map((e) => ExpenseModel.fromJson(e as Map<String, dynamic>))
           .toList(),
