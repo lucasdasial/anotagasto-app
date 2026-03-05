@@ -11,7 +11,7 @@ class PaginationModel {
     required this.totalPages,
   });
 
-  factory PaginationModel.fromJson(Map<String, dynamic> json) {
+  factory PaginationModel.fromMap(Map<String, dynamic> json) {
     return PaginationModel(
       page: json['page'] as int? ?? 1,
       pageSize: json['page_size'] as int? ?? 20,

@@ -6,7 +6,7 @@ abstract final class AppTheme {
   static ThemeData get light {
     final base = ThemeData.light(useMaterial3: true);
     return base.copyWith(
-      scaffoldBackgroundColor: AppColors.surface,
+      scaffoldBackgroundColor: AppColors.background,
       colorScheme: const ColorScheme.light(
         surface: AppColors.surface,
         onSurface: AppColors.onSurface,

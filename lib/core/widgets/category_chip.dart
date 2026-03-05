@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/expense_category.dart';
 import '../theme/app_colors.dart';
 
@@ -29,7 +30,7 @@ class CategoryChip extends StatelessWidget {
             ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
             : const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.15) : AppColors.surfaceVariant,
+          color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected ? color : AppColors.surfaceDim,
@@ -42,7 +43,7 @@ class CategoryChip extends StatelessWidget {
             Icon(
               category.icon,
               size: compact ? 14 : 16,
-              color: selected ? color : AppColors.onSurfaceVariant,
+              color: selected ? color : AppColors.secondary,
             ),
             if (!compact) ...[
               const SizedBox(width: 6),

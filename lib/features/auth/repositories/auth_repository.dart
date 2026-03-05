@@ -3,7 +3,7 @@ import 'package:anotagasto_app/core/http/http_client.dart';
 import 'package:anotagasto_app/features/auth/models/login_response_model.dart';
 
 class AuthRepository {
-  late HttpClient _http;
+  late final HttpClient _http;
 
   AuthRepository(HttpClient http) {
     _http = http;

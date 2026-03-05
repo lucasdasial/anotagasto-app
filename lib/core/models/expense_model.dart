@@ -41,20 +41,26 @@ class ExpenseModel {
   }
 }
 
-class ExpenseListResult {
+class ExpenseListModel {
   final List<ExpenseModel> expenses;
+  final int amountTotal;
   final PaginationModel pagination;
 
-  const ExpenseListResult({required this.expenses, required this.pagination});
+  const ExpenseListModel({
+    required this.expenses,
+    required this.amountTotal,
+    required this.pagination,
+  });
 
-  factory ExpenseListResult.fromJson(Map<String, dynamic> json) {
+  factory ExpenseListModel.fromMap(Map<String, dynamic> json) {
     final data = json['data'] as List? ?? [];
-    final meta = json['meta'] as Map<String, dynamic>? ?? {};
-    return ExpenseListResult(
+    final pagination = json['pagination'] as Map<String, dynamic>? ?? {};
+    return ExpenseListModel(
+      amountTotal: json["amount_total"] as int? ?? 0,
       expenses: data
           .map((e) => ExpenseModel.fromJson(e as Map<String, dynamic>))
           .toList(),
-      pagination: PaginationModel.fromJson(meta),
+      pagination: PaginationModel.fromMap(pagination),
     );
   }
 }

@@ -7,7 +7,9 @@ import 'package:anotagasto_app/features/auth/repositories/auth_repository.dart';
 import 'package:anotagasto_app/features/auth/views/login/login_view.dart';
 import 'package:anotagasto_app/features/auth/views/login/login_view_model.dart';
 import 'package:anotagasto_app/features/auth/widgets/auth_shell.dart';
+import 'package:anotagasto_app/features/expenses/expense_repository.dart';
 import 'package:anotagasto_app/features/expenses/expenses_view.dart';
+import 'package:anotagasto_app/features/expenses/expenses_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -20,6 +22,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'AnotaGasto',
       theme: AppTheme.light,
@@ -32,7 +35,10 @@ class App extends StatelessWidget {
           ),
           child: AuthShell(child: LoginView()),
         ),
-        Routes.expenseList.name: (context) => AppShell(child: ExpensesView()),
+        Routes.expenseList.name: (context) => ChangeNotifierProvider(
+          create: (_) => ExpensesViewModel(di<ExpenseRepository>()),
+          child: AppShell(child: const ExpensesView()),
+        ),
       },
     );
   }

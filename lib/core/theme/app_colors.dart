@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 abstract final class AppColors {
   static const primary = Color(0xFF1F1F1F);
   static const secondary = Color.fromARGB(255, 147, 202, 107);
+  // static const secondary = Color.fromARGB(255, 107, 164, 202);
+  static const background = Color(0xFFf4f4f4);
 
   // --- Backgrounds ---
   static const Color surface = Color(0xFFFFFFFF);
@@ -27,7 +29,7 @@ abstract final class AppColors {
   // --- Chart palette (one color per category, ordered like ExpenseCategory enum) ---
   // grocery, eat_out, cleaning_products, health, medicines, housing,
   // subscriptions, transport_public, transport_apps, education,
-  // shopping, debts, leisure, beauty, clothing, uncategorized
+  // shopping, debts, leisure, beauty, clothing, delivery, vehicle, uncategorized
   static const List<Color> chartPalette = [
     Color(0xFF4CAF50), // grocery — green
     Color(0xFFFF7043), // eat_out — deep orange
@@ -44,6 +46,8 @@ abstract final class AppColors {
     Color(0xFFFFEE58), // leisure — yellow
     Color(0xFFF06292), // beauty — light pink
     Color(0xFF26A69A), // clothing — teal
+    Color(0xFFFF8A65), // delivery — orange
+    Color(0xFF78909C), // vehicle — blue grey
     Color(0xFFBDBDBD), // uncategorized — grey
   ];
 }

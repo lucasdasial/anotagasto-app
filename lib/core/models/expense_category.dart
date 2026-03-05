@@ -16,6 +16,8 @@ enum ExpenseCategory {
   leisure,
   beauty,
   clothing,
+  delivery,
+  vehicle,
   uncategorized;
 
   String toApi() {
@@ -35,6 +37,8 @@ enum ExpenseCategory {
       ExpenseCategory.leisure => 'leisure',
       ExpenseCategory.beauty => 'beauty',
       ExpenseCategory.clothing => 'clothing',
+      ExpenseCategory.delivery => 'delivery',
+      ExpenseCategory.vehicle => 'vehicle',
       ExpenseCategory.uncategorized => 'uncategorized',
     };
   }
@@ -56,6 +60,8 @@ enum ExpenseCategory {
       'leisure' => ExpenseCategory.leisure,
       'beauty' => ExpenseCategory.beauty,
       'clothing' => ExpenseCategory.clothing,
+      'delivery' => ExpenseCategory.delivery,
+      'vehicle' => ExpenseCategory.vehicle,
       _ => ExpenseCategory.uncategorized,
     };
   }
@@ -77,6 +83,8 @@ enum ExpenseCategory {
       ExpenseCategory.leisure => 'Lazer',
       ExpenseCategory.beauty => 'Beleza',
       ExpenseCategory.clothing => 'Roupas',
+      ExpenseCategory.delivery => 'Delivery',
+      ExpenseCategory.vehicle => 'Veículo',
       ExpenseCategory.uncategorized => 'Sem categoria',
     };
   }
@@ -98,6 +106,8 @@ enum ExpenseCategory {
       ExpenseCategory.leisure => Icons.sports_esports_outlined,
       ExpenseCategory.beauty => Icons.face_outlined,
       ExpenseCategory.clothing => Icons.checkroom_outlined,
+      ExpenseCategory.delivery => Icons.delivery_dining_outlined,
+      ExpenseCategory.vehicle => Icons.directions_car_outlined,
       ExpenseCategory.uncategorized => Icons.help_outline,
     };
   }
