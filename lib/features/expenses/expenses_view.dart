@@ -1,5 +1,6 @@
 import 'package:anotagasto_app/core/models/expense_category.dart';
 import 'package:anotagasto_app/core/models/expense_model.dart';
+import 'package:anotagasto_app/core/models/user_model.dart';
 import 'package:anotagasto_app/core/theme/app_colors.dart';
 import 'package:anotagasto_app/core/utils/constants.dart';
 import 'package:anotagasto_app/core/utils/currency_formatter.dart';
@@ -11,6 +12,7 @@ import 'package:anotagasto_app/core/widgets/confirm_dialog.dart';
 import 'package:anotagasto_app/core/widgets/error_banner.dart';
 import 'package:anotagasto_app/features/expenses/expenses_view_model.dart';
 import 'package:anotagasto_app/features/expenses/widgets/add_expense_sheet.dart';
+import 'package:anotagasto_app/features/profile/profile_view_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -268,12 +270,28 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userName = context.select<ProfileViewModel, String?>(
+      (vm) => vm.viewState is SuccessStateView<UserModel>
+          ? (vm.viewState as SuccessStateView<UserModel>).data.name
+          : null,
+    );
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
           hPadding, isDesktop ? 32 : 20, hPadding, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (userName != null) ...[
+            Text(
+              'Olá, $userName',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: isDesktop ? null : 15,
+                  ),
+            ),
+            const SizedBox(height: 12),
+          ],
           Text(
             'Despesas',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(

@@ -89,14 +89,21 @@ abstract final class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.surfaceDim,
+        indicatorColor: AppColors.secondary,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: AppColors.onAccent);
+          }
+          return const IconThemeData(color: AppColors.onSurfaceVariant);
+        }),
         labelTextStyle: WidgetStateProperty.all(
           const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
         ),
       ),
       navigationRailTheme: const NavigationRailThemeData(
         backgroundColor: AppColors.surfaceVariant,
-        selectedIconTheme: IconThemeData(color: AppColors.accent),
+        indicatorColor: AppColors.primary,
+        selectedIconTheme: IconThemeData(color: AppColors.onAccent),
         unselectedIconTheme: IconThemeData(color: AppColors.onSurfaceVariant),
       ),
     );

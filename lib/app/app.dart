@@ -8,8 +8,9 @@ import 'package:anotagasto_app/features/auth/views/login/login_view.dart';
 import 'package:anotagasto_app/features/auth/views/login/login_view_model.dart';
 import 'package:anotagasto_app/features/auth/widgets/auth_shell.dart';
 import 'package:anotagasto_app/features/expenses/expense_repository.dart';
-import 'package:anotagasto_app/features/expenses/expenses_view.dart';
 import 'package:anotagasto_app/features/expenses/expenses_view_model.dart';
+import 'package:anotagasto_app/features/profile/profile_repository.dart';
+import 'package:anotagasto_app/features/profile/profile_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -35,9 +36,19 @@ class App extends StatelessWidget {
           ),
           child: AuthShell(child: LoginView()),
         ),
-        Routes.expenseList.name: (context) => ChangeNotifierProvider(
-          create: (_) => ExpensesViewModel(di<ExpenseRepository>()),
-          child: AppShell(child: const ExpensesView()),
+        Routes.expenseList.name: (context) => MultiProvider(
+          providers: [
+            ChangeNotifierProvider(
+              create: (_) => ExpensesViewModel(di<ExpenseRepository>()),
+            ),
+            ChangeNotifierProvider(
+              create: (_) => ProfileViewModel(
+                repository: di<ProfileRepository>(),
+                storage: di<StorageService>(),
+              ),
+            ),
+          ],
+          child: const AppShell(),
         ),
       },
     );
