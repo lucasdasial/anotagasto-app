@@ -1,3 +1,4 @@
+import 'package:anotagasto_app/core/models/expense_category.dart';
 import 'package:anotagasto_app/core/models/expense_model.dart';
 import 'package:anotagasto_app/core/theme/app_colors.dart';
 import 'package:anotagasto_app/core/utils/constants.dart';
@@ -82,6 +83,22 @@ class _ExpenseListBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final selectedCategories = context.select<ExpensesViewModel, Set<ExpenseCategory>>(
+      (vm) => vm.selectedCategories,
+    );
+
+    final presentCategories = data.expenses
+        .map((e) => e.category)
+        .toSet()
+        .toList()
+      ..sort((a, b) => a.index.compareTo(b.index));
+
+    final filtered = selectedCategories.isEmpty
+        ? data.expenses
+        : data.expenses
+            .where((e) => selectedCategories.contains(e.category))
+            .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -90,8 +107,14 @@ class _ExpenseListBody extends StatelessWidget {
           hPadding: hPadding,
           isDesktop: isDesktop,
         ),
+        if (presentCategories.length > 1)
+          _CategoryFilter(
+            categories: presentCategories,
+            selected: selectedCategories,
+            hPadding: hPadding,
+          ),
         Expanded(
-          child: data.expenses.isEmpty
+          child: filtered.isEmpty
               ? Center(
                   child: Text(
                     'Nenhuma despesa encontrada.',
@@ -99,10 +122,44 @@ class _ExpenseListBody extends StatelessWidget {
                   ),
                 )
               : isDesktop
-              ? _DesktopGrid(expenses: data.expenses, hPadding: hPadding)
-              : _MobileList(expenses: data.expenses, hPadding: hPadding),
+              ? _DesktopGrid(expenses: filtered, hPadding: hPadding)
+              : _MobileList(expenses: filtered, hPadding: hPadding),
         ),
       ],
+    );
+  }
+}
+
+class _CategoryFilter extends StatelessWidget {
+  final List<ExpenseCategory> categories;
+  final Set<ExpenseCategory> selected;
+  final double hPadding;
+
+  const _CategoryFilter({
+    required this.categories,
+    required this.selected,
+    required this.hPadding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: hPadding),
+        itemCount: categories.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (_, index) {
+          final category = categories[index];
+          return CategoryChip(
+            category: category,
+            selected: selected.contains(category),
+            onTap: () =>
+                context.read<ExpensesViewModel>().toggleCategory(category),
+          );
+        },
+      ),
     );
   }
 }
@@ -122,23 +179,24 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(hPadding, isDesktop ? 32 : 20, hPadding, 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Despesas',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: isDesktop ? null : 20,
-            ),
-          ),
-          Text(
-            CurrencyFormatter.format(amountTotal),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
+              fontSize: isDesktop ? null : 14,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            CurrencyFormatter.format(amountTotal),
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.onSurface,
+              fontSize: isDesktop ? null : 32,
             ),
           ),
         ],
@@ -156,7 +214,7 @@ class _MobileList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: EdgeInsets.fromLTRB(hPadding, 0, hPadding, 24),
+      padding: EdgeInsets.fromLTRB(hPadding, 8, hPadding, 24),
       itemCount: expenses.length,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (_, index) => _ExpenseItem(expense: expenses[index]),
@@ -173,7 +231,7 @@ class _DesktopGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-      padding: EdgeInsets.fromLTRB(hPadding, 0, hPadding, 24),
+      padding: EdgeInsets.fromLTRB(hPadding, 8, hPadding, 24),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisExtent: 76,

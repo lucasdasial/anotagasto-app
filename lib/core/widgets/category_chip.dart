@@ -30,7 +30,7 @@ class CategoryChip extends StatelessWidget {
             ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
             : const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
+          color: selected ? color.withValues(alpha: 0.15) : AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected ? color : AppColors.surfaceDim,
@@ -43,7 +43,7 @@ class CategoryChip extends StatelessWidget {
             Icon(
               category.icon,
               size: compact ? 14 : 16,
-              color: selected ? color : AppColors.secondary,
+              color: selected ? color : AppColors.primary,
             ),
             if (!compact) ...[
               const SizedBox(width: 6),

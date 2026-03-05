@@ -1,3 +1,5 @@
+import 'package:anotagasto_app/core/models/expense_category.dart';
+import 'package:anotagasto_app/core/models/expense_model.dart';
 import 'package:anotagasto_app/core/view_state.dart';
 import 'package:anotagasto_app/features/expenses/expense_repository.dart';
 import 'package:dio/dio.dart';
@@ -6,6 +8,10 @@ import 'package:flutter/cupertino.dart';
 class ExpensesViewModel extends ChangeNotifier {
   final ExpenseRepository expenseRepository;
   ViewState viewState = InitialStateView();
+
+  final Set<ExpenseCategory> _selectedCategories = {};
+  Set<ExpenseCategory> get selectedCategories =>
+      Set.unmodifiable(_selectedCategories);
 
   ExpensesViewModel(this.expenseRepository);
 
@@ -26,6 +32,20 @@ class ExpensesViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  void toggleCategory(ExpenseCategory category) {
+    if (_selectedCategories.contains(category)) {
+      _selectedCategories.remove(category);
+    } else {
+      _selectedCategories.add(category);
+    }
+    notifyListeners();
+  }
+
+  List<ExpenseModel> applyFilter(List<ExpenseModel> all) {
+    if (_selectedCategories.isEmpty) return all;
+    return all.where((e) => _selectedCategories.contains(e.category)).toList();
   }
 
   Future<void> addExpense() async {}
