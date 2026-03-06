@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:anotagasto_app/core/models/expense_category.dart';
+import 'package:anotagasto_app/core/models/expense_model.dart';
+import 'package:anotagasto_app/core/utils/date_formatter.dart';
 import 'package:anotagasto_app/core/theme/app_colors.dart';
 import 'package:anotagasto_app/core/utils/constants.dart';
 import 'package:anotagasto_app/core/widgets/app_snack_bar.dart';
@@ -13,12 +15,26 @@ import 'package:provider/provider.dart';
 
 Future<void> showAddExpenseSheet(BuildContext context) {
   final vm = context.read<ExpensesViewModel>();
+  return _showSheet(context, vm, null);
+}
+
+Future<void> showEditExpenseSheet(BuildContext context, ExpenseModel expense) {
+  final vm = context.read<ExpensesViewModel>();
+  return _showSheet(context, vm, expense);
+}
+
+Future<void> _showSheet(
+  BuildContext context,
+  ExpensesViewModel vm,
+  ExpenseModel? initialExpense,
+) {
   return showGeneralDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Fechar',
     barrierColor: Colors.transparent,
-    pageBuilder: (_, _, _) => _AddExpenseSheetPage(viewModel: vm),
+    pageBuilder: (_, _, _) =>
+        _AddExpenseSheetPage(viewModel: vm, initialExpense: initialExpense),
     transitionBuilder: (_, anim, _, child) {
       final slide = Tween<Offset>(
         begin: const Offset(0, 1),
@@ -32,8 +48,12 @@ Future<void> showAddExpenseSheet(BuildContext context) {
 
 class _AddExpenseSheetPage extends StatefulWidget {
   final ExpensesViewModel viewModel;
+  final ExpenseModel? initialExpense;
 
-  const _AddExpenseSheetPage({required this.viewModel});
+  const _AddExpenseSheetPage({
+    required this.viewModel,
+    this.initialExpense,
+  });
 
   @override
   State<_AddExpenseSheetPage> createState() => _AddExpenseSheetPageState();
@@ -41,10 +61,29 @@ class _AddExpenseSheetPage extends StatefulWidget {
 
 class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
   final _formKey = GlobalKey<FormState>();
-  final _descCtrl = TextEditingController();
-  final _valueCtrl = TextEditingController();
-  ExpenseCategory _category = ExpenseCategory.uncategorized;
+  late final TextEditingController _descCtrl;
+  late final TextEditingController _valueCtrl;
+  late ExpenseCategory _category;
+  late DateTime _selectedDate;
   bool _loading = false;
+
+  bool get _isEditing => widget.initialExpense != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final expense = widget.initialExpense;
+    _descCtrl = TextEditingController(text: expense?.description ?? '');
+    _category = expense?.category ?? ExpenseCategory.uncategorized;
+    _selectedDate = expense?.date ?? DateTime.now();
+    _valueCtrl = TextEditingController(
+      text: expense != null ? _formatCents(expense.value) : '',
+    );
+  }
+
+  String _formatCents(int cents) {
+    return (cents / 100).toStringAsFixed(2).replaceAll('.', ',');
+  }
 
   @override
   void dispose() {
@@ -62,17 +101,28 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await widget.viewModel.addExpense(
-        value: _valueCents,
-        description: _descCtrl.text.trim(),
-        category: _category,
-      );
+      if (_isEditing) {
+        await widget.viewModel.editExpense(
+          id: widget.initialExpense!.id,
+          value: _valueCents,
+          description: _descCtrl.text.trim(),
+          category: _category,
+          date: _selectedDate,
+        );
+      } else {
+        await widget.viewModel.addExpense(
+          value: _valueCents,
+          description: _descCtrl.text.trim(),
+          category: _category,
+        );
+      }
       if (mounted) Navigator.of(context).pop();
     } on DioException catch (e) {
       if (mounted) {
         AppSnackBar.error(
           context,
-          e.response?.data['error'] ?? 'Erro ao adicionar despesa.',
+          e.response?.data['error'] ??
+              (_isEditing ? 'Erro ao editar despesa.' : 'Erro ao adicionar despesa.'),
         );
       }
     } catch (_) {
@@ -139,7 +189,7 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Nova despesa',
+                            _isEditing ? 'Editar despesa' : 'Nova despesa',
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
@@ -169,6 +219,13 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
                                 ? 'Informe a descrição'
                                 : null,
                           ),
+                          if (_isEditing) ...[
+                            const SizedBox(height: 12),
+                            _DatePickerRow(
+                              date: _selectedDate,
+                              onChanged: (d) => setState(() => _selectedDate = d),
+                            ),
+                          ],
                           const SizedBox(height: 16),
                           SizedBox(
                             height: 36,
@@ -209,7 +266,7 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Text('Adicionar'),
+                                : Text(_isEditing ? 'Salvar' : 'Adicionar'),
                           ),
                         ],
                       ),
@@ -221,6 +278,46 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DatePickerRow extends StatelessWidget {
+  final DateTime date;
+  final ValueChanged<DateTime> onChanged;
+
+  const _DatePickerRow({required this.date, required this.onChanged});
+
+  Future<void> _pick(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) onChanged(picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => _pick(context),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            const Icon(Icons.calendar_today_outlined, size: 18, color: AppColors.onSurfaceVariant),
+            const SizedBox(width: 10),
+            Text(
+              DateFormatter.formatDate(date),
+              style: const TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
+            ),
+            const Spacer(),
+            const Icon(Icons.chevron_right, size: 18, color: AppColors.onSurfaceMuted),
+          ],
+        ),
+      ),
     );
   }
 }

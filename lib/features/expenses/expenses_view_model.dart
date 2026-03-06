@@ -74,7 +74,7 @@ class ExpensesViewModel extends ChangeNotifier {
       final current = (viewState as SuccessStateView<ExpenseListModel>).data;
       viewState = SuccessStateView(
         ExpenseListModel(
-          expenses: [expense, ...current.expenses],
+          expenses: _sortedByDate([expense, ...current.expenses]),
           amountTotal: current.amountTotal + expense.value,
           pagination: PaginationModel(
             page: current.pagination.page,
@@ -88,6 +88,38 @@ class ExpensesViewModel extends ChangeNotifier {
     }
   }
 
+  /// Throws on error — caller is responsible for handling.
+  Future<void> editExpense({
+    required String id,
+    required int value,
+    required String description,
+    required ExpenseCategory category,
+    required DateTime date,
+  }) async {
+    final updated = await expenseRepository.updateExpense(
+      id: id,
+      value: value,
+      description: description,
+      category: category,
+      date: date,
+    );
+
+    if (viewState is SuccessStateView<ExpenseListModel>) {
+      final current = (viewState as SuccessStateView<ExpenseListModel>).data;
+      final old = current.expenses.firstWhere((e) => e.id == id);
+      viewState = SuccessStateView(
+        ExpenseListModel(
+          expenses: _sortedByDate(
+            current.expenses.map((e) => e.id == id ? updated : e).toList(),
+          ),
+          amountTotal: current.amountTotal - old.value + updated.value,
+          pagination: current.pagination,
+        ),
+      );
+      notifyListeners();
+    }
+  }
+
   void toggleCategory(ExpenseCategory category) {
     if (_selectedCategories.contains(category)) {
       _selectedCategories.remove(category);
@@ -95,6 +127,10 @@ class ExpensesViewModel extends ChangeNotifier {
       _selectedCategories.add(category);
     }
     notifyListeners();
+  }
+
+  List<ExpenseModel> _sortedByDate(List<ExpenseModel> expenses) {
+    return [...expenses]..sort((a, b) => b.date.compareTo(a.date));
   }
 
   List<ExpenseModel> applyFilter(List<ExpenseModel> all) {

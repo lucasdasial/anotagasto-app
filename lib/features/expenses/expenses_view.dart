@@ -11,7 +11,8 @@ import 'package:anotagasto_app/core/widgets/category_chip.dart';
 import 'package:anotagasto_app/core/widgets/confirm_dialog.dart';
 import 'package:anotagasto_app/core/widgets/error_banner.dart';
 import 'package:anotagasto_app/features/expenses/expenses_view_model.dart';
-import 'package:anotagasto_app/features/expenses/widgets/add_expense_sheet.dart';
+import 'package:anotagasto_app/features/expenses/widgets/add_expense_sheet.dart'
+    show showAddExpenseSheet, showEditExpenseSheet;
 import 'package:anotagasto_app/features/profile/profile_view_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -373,7 +374,10 @@ class _MobileList extends StatelessWidget {
                 }
               });
             },
-            child: _ExpenseItem(expense: expense),
+            child: _ExpenseItem(
+              expense: expense,
+              onEdit: () => showEditExpenseSheet(context, expense),
+            ),
           );
         },
       ),
@@ -400,6 +404,7 @@ class _DesktopGrid extends StatelessWidget {
       itemCount: expenses.length,
       itemBuilder: (_, index) => _ExpenseItem(
         expense: expenses[index],
+        onEdit: () => showEditExpenseSheet(context, expenses[index]),
         onDelete: () => _confirmDelete(context, expenses[index]),
       ),
     );
@@ -408,13 +413,18 @@ class _DesktopGrid extends StatelessWidget {
 
 class _ExpenseItem extends StatelessWidget {
   final ExpenseModel expense;
+  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
-  const _ExpenseItem({required this.expense, this.onDelete});
+  const _ExpenseItem({required this.expense, this.onEdit, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    // Mobile: onEdit is set but onDelete is null (delete is via swipe).
+    // Desktop: both onEdit and onDelete are set as icon buttons.
+    final isMobile = onDelete == null;
+
+    Widget content = Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -455,8 +465,16 @@ class _ExpenseItem extends StatelessWidget {
             CurrencyFormatter.format(expense.value),
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           ),
-          if (onDelete != null) ...[
+          if (!isMobile) ...[
             const SizedBox(width: 4),
+            IconButton(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              color: AppColors.onSurfaceMuted,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              visualDensity: VisualDensity.compact,
+            ),
             IconButton(
               onPressed: onDelete,
               icon: const Icon(Icons.delete_outline, size: 18),
@@ -469,5 +487,11 @@ class _ExpenseItem extends StatelessWidget {
         ],
       ),
     );
+
+    if (isMobile && onEdit != null) {
+      content = GestureDetector(onTap: onEdit, child: content);
+    }
+
+    return content;
   }
 }

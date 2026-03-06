@@ -29,6 +29,28 @@ class ExpenseRepository {
         "value": value,
         "description": description,
         "category": category.toApi(),
+        "date": DateTime.now().toIso8601String().substring(0, 10),
+      },
+    );
+    return ExpenseModel.fromJson(response.data['data']);
+  }
+
+  Future<ExpenseModel> updateExpense({
+    required String id,
+    required int value,
+    required String description,
+    required ExpenseCategory category,
+    required DateTime date,
+  }) async {
+    final response = await _http.put(
+      "/expenses/$id",
+      bodyParams: {
+        "expense": {
+          "value": value,
+          "description": description,
+          "category": category.toApi(),
+          "date": date.toIso8601String().substring(0, 10),
+        },
       },
     );
     return ExpenseModel.fromJson(response.data['data']);
