@@ -149,11 +149,15 @@ class _ExpenseListBody extends StatelessWidget {
             .where((e) => selectedCategories.contains(e.category))
             .toList();
 
+    final displayTotal = selectedCategories.isEmpty
+        ? data.amountTotal
+        : filtered.fold(0, (sum, e) => sum + e.value);
+
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Header(
-          amountTotal: data.amountTotal,
+          amountTotal: displayTotal,
           hPadding: hPadding,
           isDesktop: isDesktop,
         ),
