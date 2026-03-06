@@ -27,7 +27,9 @@ class App extends StatelessWidget {
       scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'AnotaGasto',
       theme: AppTheme.light,
-      initialRoute: Routes.login.name,
+      initialRoute: di<StorageService>().getToken() != null
+          ? Routes.expenseList.name
+          : Routes.login.name,
       routes: {
         Routes.login.name: (context) => ChangeNotifierProvider(
           create: (_) => LoginViewModel(
