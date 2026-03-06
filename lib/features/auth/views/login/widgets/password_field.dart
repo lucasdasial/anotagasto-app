@@ -5,10 +5,12 @@ class PasswordField extends StatefulWidget {
     super.key,
     required this.controller,
     required this.validator,
+    this.label = 'Senha',
   });
 
   final TextEditingController controller;
   final String? Function(String?) validator;
+  final String label;
 
   @override
   State<PasswordField> createState() => _PasswordFieldState();
@@ -24,7 +26,7 @@ class _PasswordFieldState extends State<PasswordField> {
       obscureText: _obscure,
       decoration: InputDecoration(
         fillColor: Colors.white,
-        labelText: 'Senha',
+        labelText: widget.label,
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(

@@ -20,4 +20,15 @@ class AuthRepository {
       rethrow;
     }
   }
+
+  Future<void> register(String name, String phone, String password) async {
+    try {
+      await _http.post(
+        "/register",
+        bodyParams: {"name": name, "phone_number": phone, "password": password},
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

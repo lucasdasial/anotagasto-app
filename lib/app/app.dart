@@ -6,6 +6,8 @@ import 'package:anotagasto_app/core/widgets/app_shell.dart';
 import 'package:anotagasto_app/features/auth/repositories/auth_repository.dart';
 import 'package:anotagasto_app/features/auth/views/login/login_view.dart';
 import 'package:anotagasto_app/features/auth/views/login/login_view_model.dart';
+import 'package:anotagasto_app/features/auth/views/register/register_view.dart';
+import 'package:anotagasto_app/features/auth/views/register/register_view_model.dart';
 import 'package:anotagasto_app/features/auth/widgets/auth_shell.dart';
 import 'package:anotagasto_app/features/expenses/expense_repository.dart';
 import 'package:anotagasto_app/features/expenses/expenses_view_model.dart';
@@ -37,6 +39,13 @@ class App extends StatelessWidget {
             storage: di<StorageService>(),
           ),
           child: AuthShell(child: LoginView()),
+        ),
+        Routes.register.name: (context) => ChangeNotifierProvider(
+          create: (_) => RegisterViewModel(
+            authRepository: di<AuthRepository>(),
+            storage: di<StorageService>(),
+          ),
+          child: AuthShell(child: RegisterView()),
         ),
         Routes.expenseList.name: (context) => MultiProvider(
           providers: [
