@@ -6,6 +6,8 @@ import 'package:anotagasto_app/core/widgets/app_shell.dart';
 import 'package:anotagasto_app/features/auth/repositories/auth_repository.dart';
 import 'package:anotagasto_app/features/auth/views/login/login_view.dart';
 import 'package:anotagasto_app/features/auth/views/login/login_view_model.dart';
+import 'package:anotagasto_app/features/analytics/analytics_repository.dart';
+import 'package:anotagasto_app/features/analytics/analytics_view_model.dart';
 import 'package:anotagasto_app/features/auth/views/register/register_view.dart';
 import 'package:anotagasto_app/features/auth/views/register/register_view_model.dart';
 import 'package:anotagasto_app/features/auth/widgets/auth_shell.dart';
@@ -57,6 +59,9 @@ class App extends StatelessWidget {
                 repository: di<ProfileRepository>(),
                 storage: di<StorageService>(),
               ),
+            ),
+            ChangeNotifierProvider(
+              create: (_) => AnalyticsViewModel(di<AnalyticsRepository>()),
             ),
           ],
           child: const AppShell(),

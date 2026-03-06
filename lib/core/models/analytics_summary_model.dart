@@ -2,7 +2,7 @@ import 'expense_category.dart';
 
 class CategoryStat {
   final ExpenseCategory category;
-  final double total;
+  final int total;
   final double percentage;
 
   const CategoryStat({
@@ -14,14 +14,14 @@ class CategoryStat {
   factory CategoryStat.fromJson(Map<String, dynamic> json) {
     return CategoryStat(
       category: ExpenseCategory.fromApi(json['category'] as String? ?? ''),
-      total: (json['total'] as num?)?.toDouble() ?? 0.0,
-      percentage: (json['percentage'] as num?)?.toDouble() ?? 0.0,
+      total: (json['total'] as num?)?.toInt() ?? 0,
+      percentage: 0, // calculated in AnalyticsSummaryModel.fromJson
     );
   }
 }
 
 class AnalyticsSummaryModel {
-  final double totalMonth;
+  final int totalMonth;
   final List<CategoryStat> byCategory;
 
   const AnalyticsSummaryModel({
@@ -31,12 +31,22 @@ class AnalyticsSummaryModel {
 
   factory AnalyticsSummaryModel.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>? ?? json;
+    final totalMonth = (data['total'] as num?)?.toInt() ?? 0;
     final categories = data['by_category'] as List? ?? [];
+    final byCategory = categories
+        .map((e) => CategoryStat.fromJson(e as Map<String, dynamic>))
+        .toList();
+    // Percentage is not returned by the API; calculate client-side.
+    final withPercentage = byCategory
+        .map((s) => CategoryStat(
+              category: s.category,
+              total: s.total,
+              percentage: totalMonth > 0 ? s.total / totalMonth * 100 : 0,
+            ))
+        .toList();
     return AnalyticsSummaryModel(
-      totalMonth: (data['total_month'] as num?)?.toDouble() ?? 0.0,
-      byCategory: categories
-          .map((e) => CategoryStat.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      totalMonth: totalMonth,
+      byCategory: withPercentage,
     );
   }
 }

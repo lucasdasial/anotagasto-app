@@ -20,7 +20,8 @@ class HttpClient {
     _dio.interceptors.addAll([AuthInterceptor(storage), HttpErrorHandler()]);
   }
 
-  Future<Response> get(String path) => _dio.get(path);
+  Future<Response> get(String path, {Map<String, dynamic>? queryParams}) =>
+      _dio.get(path, queryParameters: queryParams);
   Future<Response> post(String path, {Object? bodyParams}) =>
       _dio.post(path, data: bodyParams);
   Future<Response> delete(String path) => _dio.delete(path);

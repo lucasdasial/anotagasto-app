@@ -1,5 +1,6 @@
 import 'package:anotagasto_app/core/http/http_client.dart';
 import 'package:anotagasto_app/core/storage/storage_service.dart';
+import 'package:anotagasto_app/features/analytics/analytics_repository.dart';
 import 'package:anotagasto_app/features/auth/repositories/auth_repository.dart';
 import 'package:anotagasto_app/features/expenses/expense_repository.dart';
 import 'package:anotagasto_app/features/profile/profile_repository.dart';
@@ -16,4 +17,5 @@ Future<void> setupServiceLocator() async {
   di.registerSingleton<AuthRepository>(AuthRepository(di<HttpClient>()));
   di.registerSingleton<ExpenseRepository>(ExpenseRepository(di<HttpClient>()));
   di.registerSingleton<ProfileRepository>(ProfileRepository(di<HttpClient>()));
+  di.registerSingleton<AnalyticsRepository>(AnalyticsRepository(di<HttpClient>()));
 }

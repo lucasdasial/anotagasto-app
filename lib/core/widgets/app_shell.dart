@@ -2,6 +2,7 @@ import 'package:anotagasto_app/app/routes.dart';
 import 'package:anotagasto_app/core/di/service_locator.dart';
 import 'package:anotagasto_app/core/storage/storage_service.dart';
 import 'package:anotagasto_app/core/utils/constants.dart';
+import 'package:anotagasto_app/features/analytics/analytics_view.dart';
 import 'package:anotagasto_app/features/expenses/expenses_view.dart';
 import 'package:anotagasto_app/features/profile/profile_view.dart';
 import 'package:anotagasto_app/features/profile/profile_view_model.dart';
@@ -21,11 +22,13 @@ class _AppShellState extends State<AppShell> {
 
   static const _tabs = [
     (icon: Icons.receipt_long_outlined, label: 'Despesas'),
+    (icon: Icons.bar_chart_outlined, label: 'Análises'),
     (icon: Icons.person_outline, label: 'Perfil'),
   ];
 
   static const _views = [
     ExpensesView(),
+    AnalyticsView(),
     ProfileView(),
   ];
 
