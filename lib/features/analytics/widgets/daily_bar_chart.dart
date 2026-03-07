@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:anotagasto_app/core/models/analytics_daily_model.dart';
 import 'package:anotagasto_app/core/theme/app_colors.dart';
 import 'package:anotagasto_app/core/utils/currency_formatter.dart';
@@ -33,18 +35,28 @@ class DailyBarChart extends StatelessWidget {
 
     const roundedTop = BorderRadius.vertical(top: Radius.circular(3));
 
+    final maxValue = dayMap.values.isEmpty
+        ? 1.0
+        : dayMap.values.map((v) => v.toDouble()).reduce(max);
+    final maxY = maxValue * 1.2;
+    // Placeholder height: 40–65% of maxValue with two-frequency sine variation.
+    double placeholderFor(int index) =>
+        maxValue * (0.40 + 0.15 * ((sin(index * 1.9) + 1) / 2) +
+            0.10 * ((sin(index * 3.3) + 1) / 2));
+
     final groups = days.asMap().entries.map((entry) {
       final index = entry.key;
       final day = entry.value;
       final total = (dayMap[day] ?? 0).toDouble();
+      final hasData = total > 0;
       return BarChartGroupData(
         x: index,
         barRods: [
           BarChartRodData(
-            toY: total,
-            color: AppColors.primary,
+            toY: hasData ? total : placeholderFor(index),
+            color: hasData ? AppColors.primary : AppColors.surfaceDim,
             width: 28,
-            borderRadius: total > 0 ? roundedTop : BorderRadius.zero,
+            borderRadius: roundedTop,
           ),
         ],
       );
@@ -54,6 +66,7 @@ class DailyBarChart extends StatelessWidget {
       height: 180,
       child: BarChart(
         BarChartData(
+          maxY: maxY,
           barGroups: groups,
           alignment: BarChartAlignment.spaceAround,
           titlesData: FlTitlesData(

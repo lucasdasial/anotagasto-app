@@ -33,27 +33,36 @@ class _AnalyticsViewState extends State<AnalyticsView> {
   Widget build(BuildContext context) {
     final vm = context.watch<AnalyticsViewModel>();
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final isDesktop = constraints.maxWidth >= 600;
-      final hPadding =
-          isDesktop ? Constants.paddingPage : Constants.paddingPage * 0.67;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 600;
+        final hPadding = isDesktop
+            ? Constants.paddingPage
+            : Constants.paddingPage * 0.67;
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(hPadding, isDesktop ? 32 : 20, hPadding, 0),
-            child: MonthSelector(
-              month: vm.month,
-              canGoNext: vm.canGoNext,
-              onPrevious: () => context.read<AnalyticsViewModel>().previousMonth(),
-              onNext: () => context.read<AnalyticsViewModel>().nextMonth(),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                hPadding,
+                isDesktop ? 32 : 20,
+                hPadding,
+                0,
+              ),
+              child: MonthSelector(
+                month: vm.month,
+                canGoNext: vm.canGoNext,
+                onPrevious: () =>
+                    context.read<AnalyticsViewModel>().previousMonth(),
+                onNext: () => context.read<AnalyticsViewModel>().nextMonth(),
+              ),
             ),
-          ),
-          Expanded(child: _buildBody(vm, hPadding, isDesktop)),
-        ],
-      );
-    });
+            Expanded(child: _buildBody(vm, hPadding, isDesktop)),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildBody(AnalyticsViewModel vm, double hPadding, bool isDesktop) {
@@ -85,8 +94,11 @@ class _AnalyticsViewState extends State<AnalyticsView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.bar_chart_outlined,
-                size: 56, color: AppColors.onSurfaceMuted),
+            Icon(
+              Icons.bar_chart_outlined,
+              size: 56,
+              color: AppColors.onSurfaceMuted,
+            ),
             const SizedBox(height: 12),
             Text(
               'Nenhuma despesa neste mês.',
@@ -200,47 +212,65 @@ class _TotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activeCategories = summary.byCategory
+        .where((s) => s.total > 0)
+        .length;
+    final top = summary.topCategory;
+    final gasto = summary.count == 1 ? 'item' : 'itens';
+    final categoria = activeCategories == 1 ? 'categoria' : 'categorias';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: AppColors.primary,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Total do mês',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                CurrencyFormatter.format(summary.totalMonth),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          Text(
+            'Total do mês',
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${summary.byCategory.where((s) => s.total > 0).length} categorias',
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            CurrencyFormatter.format(summary.totalMonth),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
           ),
+          const SizedBox(height: 16),
+          const Divider(color: Colors.white24, height: 1),
+          const SizedBox(height: 14),
+          _InfoLine('Você registrou ${summary.count} $gasto'),
+          const SizedBox(height: 6),
+          _InfoLine(
+            'Seus gastos estão distribuídos em $activeCategories $categoria',
+          ),
+          if (top != null) ...[
+            const SizedBox(height: 6),
+            _InfoLine(
+              'A categoria com maior gasto foi: ${top.category.label} (${CurrencyFormatter.format(top.total)})',
+            ),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _InfoLine extends StatelessWidget {
+  final String text;
+
+  const _InfoLine(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(color: Colors.white70, fontSize: 13),
     );
   }
 }
@@ -254,10 +284,9 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: Theme.of(context)
-          .textTheme
-          .titleSmall
-          ?.copyWith(fontWeight: FontWeight.w600),
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 }

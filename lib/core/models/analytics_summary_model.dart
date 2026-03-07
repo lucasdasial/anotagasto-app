@@ -22,16 +22,24 @@ class CategoryStat {
 
 class AnalyticsSummaryModel {
   final int totalMonth;
+  final int count;
   final List<CategoryStat> byCategory;
 
   const AnalyticsSummaryModel({
     required this.totalMonth,
+    required this.count,
     required this.byCategory,
   });
+
+  CategoryStat? get topCategory =>
+      byCategory.where((s) => s.total > 0).isNotEmpty
+          ? byCategory.where((s) => s.total > 0).first
+          : null;
 
   factory AnalyticsSummaryModel.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>? ?? json;
     final totalMonth = (data['total'] as num?)?.toInt() ?? 0;
+    final count = (data['count'] as num?)?.toInt() ?? 0;
     final categories = data['by_category'] as List? ?? [];
     final byCategory = categories
         .map((e) => CategoryStat.fromJson(e as Map<String, dynamic>))
@@ -46,6 +54,7 @@ class AnalyticsSummaryModel {
         .toList();
     return AnalyticsSummaryModel(
       totalMonth: totalMonth,
+      count: count,
       byCategory: withPercentage,
     );
   }
