@@ -21,6 +21,47 @@ void main() {
         data: data,
       );
 
+  group('register', () {
+    test('completes without error on success', () async {
+      when(() => http.post(any(), bodyParams: any(named: 'bodyParams')))
+          .thenAnswer((_) async => successResponse({'data': {}}));
+
+      await expectLater(
+        repository.register('João Silva', '11999999999', 'password123'),
+        completes,
+      );
+    });
+
+    test('sends name, phone_number and password in request body', () async {
+      when(() => http.post(any(), bodyParams: any(named: 'bodyParams')))
+          .thenAnswer((_) async => successResponse({'data': {}}));
+
+      await repository.register('João Silva', '11999999999', 'password123');
+
+      verify(
+        () => http.post(
+          '/register',
+          bodyParams: {
+            'name': 'João Silva',
+            'phone_number': '11999999999',
+            'password': 'password123',
+          },
+        ),
+      ).called(1);
+    });
+
+    test('rethrows DioException from http client', () {
+      final exception = DioException(requestOptions: RequestOptions());
+      when(() => http.post(any(), bodyParams: any(named: 'bodyParams')))
+          .thenThrow(exception);
+
+      expect(
+        () => repository.register('João Silva', '11999999999', 'password123'),
+        throwsA(isA<DioException>()),
+      );
+    });
+  });
+
   group('login', () {
     test('returns LoginResponseModel with token on success', () async {
       when(() => http.post(any(), bodyParams: any(named: 'bodyParams')))
