@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  static const primary = Color(0xFF1F1F1F);
-  static const secondary = Color.fromARGB(255, 147, 202, 107);
-  // static const secondary = Color.fromARGB(255, 107, 164, 202);
+  static const primary = Color(0xFF2563EB);
   static const background = Color(0xFFf4f4f4);
 
   // --- Backgrounds ---
@@ -18,7 +16,7 @@ abstract final class AppColors {
 
   // --- Accent ---
   static const Color accent = primary;
-  static const Color accentLight = Color(0xFF3A3A3A);
+  static const Color accentLight = Color(0xFF3B82F6);
   static const Color onAccent = Color(0xFFFFFFFF);
 
   // --- Semantic ---

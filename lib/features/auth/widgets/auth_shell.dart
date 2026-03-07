@@ -53,7 +53,7 @@ class _AuthBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _TriangleBackgroundPainter(color: AppColors.secondary),
+      painter: _TriangleBackgroundPainter(color: AppColors.primary),
     );
   }
 }

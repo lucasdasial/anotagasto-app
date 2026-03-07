@@ -122,7 +122,9 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
         AppSnackBar.error(
           context,
           e.response?.data['error'] ??
-              (_isEditing ? 'Erro ao editar despesa.' : 'Erro ao adicionar despesa.'),
+              (_isEditing
+                  ? 'Erro ao editar despesa.'
+                  : 'Erro ao adicionar despesa.'),
         );
       }
     } catch (_) {
@@ -139,6 +141,7 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Stack(
@@ -148,28 +151,36 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
           child: const SizedBox.expand(),
         ),
         Align(
-          alignment: Alignment.bottomCenter,
+          alignment: isDesktop ? Alignment.center : Alignment.bottomCenter,
           child: Material(
             color: Colors.transparent,
             child: SafeArea(
               top: false,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 600),
+                constraints: BoxConstraints(
+                  maxWidth: isDesktop ? 520 : 600,
+                ),
                 child: AnimatedPadding(
                   duration: const Duration(milliseconds: 150),
-                  padding: EdgeInsets.only(bottom: bottomInset),
+                  padding: EdgeInsets.only(
+                    bottom: isDesktop ? 0 : bottomInset,
+                    left: isDesktop ? 16 : 0,
+                    right: isDesktop ? 16 : 0,
+                  ),
                   child: Container(
                     padding: EdgeInsets.fromLTRB(
                       Constants.paddingPage,
-                      20,
+                      isDesktop ? 20 : 20,
                       Constants.paddingPage,
                       Constants.paddingPage,
                     ),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
+                      borderRadius: isDesktop
+                          ? BorderRadius.circular(16)
+                          : const BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
                     ),
                     child: Form(
                       key: _formKey,
@@ -177,29 +188,48 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Center(
-                            child: Container(
-                              width: 40,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceDim,
-                                borderRadius: BorderRadius.circular(2),
+                          if (!isDesktop)
+                            Center(
+                              child: Container(
+                                width: 40,
+                                height: 4,
+                                margin: const EdgeInsets.only(bottom: 20),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceDim,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
                             ),
+                          Row(
+                            children: [
+                              Text(
+                                _isEditing ? 'Editar despesa' : 'Novo Gasto',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const Spacer(),
+                              if (isDesktop)
+                                IconButton(
+                                  icon: const Icon(Icons.close, size: 20),
+                                  color: AppColors.onSurfaceVariant,
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                            ],
                           ),
                           const SizedBox(height: 20),
-                          Text(
-                            _isEditing ? 'Editar despesa' : 'Nova despesa',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 24),
                           TextFormField(
                             controller: _valueCtrl,
                             keyboardType: TextInputType.number,
                             inputFormatters: [_CurrencyInputFormatter()],
                             textAlign: TextAlign.end,
-                            style: Theme.of(context).textTheme.headlineMedium
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
                                 ?.copyWith(fontWeight: FontWeight.bold),
                             decoration: const InputDecoration(
                               prefixText: 'R\$  ',
@@ -213,47 +243,48 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
                             controller: _descCtrl,
                             textCapitalization: TextCapitalization.sentences,
                             decoration: const InputDecoration(
-                              hintText: 'Descrição',
+                              hintText: 'No que você gastou?',
                             ),
-                            validator: (v) => v == null || v.trim().isEmpty
-                                ? 'Informe a descrição'
-                                : null,
+                            validator: (v) =>
+                                v == null || v.trim().isEmpty
+                                    ? 'Informe a descrição'
+                                    : null,
                           ),
                           if (_isEditing) ...[
                             const SizedBox(height: 12),
                             _DatePickerRow(
                               date: _selectedDate,
-                              onChanged: (d) => setState(() => _selectedDate = d),
+                              onChanged: (d) =>
+                                  setState(() => _selectedDate = d),
                             ),
                           ],
                           const SizedBox(height: 16),
-                          SizedBox(
-                            height: 36,
-                            child: ScrollConfiguration(
-                              behavior:
-                                  ScrollConfiguration.of(context).copyWith(
-                                dragDevices: {
-                                  PointerDeviceKind.touch,
-                                  PointerDeviceKind.mouse,
-                                },
-                              ),
-                              child: ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: ExpenseCategory.values.length,
-                                separatorBuilder: (_, _) =>
-                                    const SizedBox(width: 8),
-                                itemBuilder: (_, index) {
-                                  final cat = ExpenseCategory.values[index];
-                                  return CategoryChip(
-                                    category: cat,
-                                    selected: _category == cat,
-                                    onTap: () =>
-                                        setState(() => _category = cat),
-                                  );
-                                },
-                              ),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Categoria',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                             ),
                           ),
+                          const SizedBox(height: 10),
+                          if (isDesktop)
+                            _CategoryGrid(
+                              selected: _category,
+                              onSelect: (cat) =>
+                                  setState(() => _category = cat),
+                            )
+                          else
+                            _CategoryScroll(
+                              selected: _category,
+                              onSelect: (cat) =>
+                                  setState(() => _category = cat),
+                            ),
                           const SizedBox(height: 24),
                           ElevatedButton(
                             onPressed: _loading ? null : _submit,
@@ -282,6 +313,123 @@ class _AddExpenseSheetPageState extends State<_AddExpenseSheetPage> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Category selectors
+// ---------------------------------------------------------------------------
+
+class _CategoryGrid extends StatelessWidget {
+  final ExpenseCategory selected;
+  final ValueChanged<ExpenseCategory> onSelect;
+
+  const _CategoryGrid({required this.selected, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 200,
+      child: GridView.builder(
+        physics: const ClampingScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          mainAxisExtent: 76,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+        ),
+        itemCount: ExpenseCategory.values.length,
+        itemBuilder: (_, index) {
+          final cat = ExpenseCategory.values[index];
+          final isSelected = selected == cat;
+          return InkWell(
+            onTap: () => onSelect(cat),
+            borderRadius: BorderRadius.circular(10),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.08)
+                    : AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    cat.icon,
+                    size: 20,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    cat.label,
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.onSurfaceVariant,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CategoryScroll extends StatelessWidget {
+  final ExpenseCategory selected;
+  final ValueChanged<ExpenseCategory> onSelect;
+
+  const _CategoryScroll({required this.selected, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 36,
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          dragDevices: {
+            PointerDeviceKind.touch,
+            PointerDeviceKind.mouse,
+          },
+        ),
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: ExpenseCategory.values.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 8),
+          itemBuilder: (_, index) {
+            final cat = ExpenseCategory.values[index];
+            return CategoryChip(
+              category: cat,
+              selected: selected == cat,
+              onTap: () => onSelect(cat),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Date picker row
+// ---------------------------------------------------------------------------
+
 class _DatePickerRow extends StatelessWidget {
   final DateTime date;
   final ValueChanged<DateTime> onChanged;
@@ -307,20 +455,35 @@ class _DatePickerRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_outlined, size: 18, color: AppColors.onSurfaceVariant),
+            const Icon(
+              Icons.calendar_today_outlined,
+              size: 18,
+              color: AppColors.onSurfaceVariant,
+            ),
             const SizedBox(width: 10),
             Text(
               DateFormatter.formatDate(date),
-              style: const TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
             const Spacer(),
-            const Icon(Icons.chevron_right, size: 18, color: AppColors.onSurfaceMuted),
+            const Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: AppColors.onSurfaceMuted,
+            ),
           ],
         ),
       ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Currency input formatter
+// ---------------------------------------------------------------------------
 
 class _CurrencyInputFormatter extends TextInputFormatter {
   @override

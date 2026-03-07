@@ -129,6 +129,11 @@ class ExpensesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearCategories() {
+    _selectedCategories.clear();
+    notifyListeners();
+  }
+
   List<ExpenseModel> _sortedByDate(List<ExpenseModel> expenses) {
     return [...expenses]..sort((a, b) => b.date.compareTo(a.date));
   }

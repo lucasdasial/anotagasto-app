@@ -20,10 +20,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-Future<void> _confirmDelete(
-  BuildContext context,
-  ExpenseModel expense,
-) async {
+Future<void> _confirmDelete(BuildContext context, ExpenseModel expense) async {
   final confirmed = await showConfirmDialog(
     context,
     title: 'Excluir despesa',
@@ -43,7 +40,10 @@ Future<void> _confirmDelete(
     }
   } catch (_) {
     if (context.mounted) {
-      AppSnackBar.error(context, 'Ocorreu um erro inesperado. Tente novamente.');
+      AppSnackBar.error(
+        context,
+        'Ocorreu um erro inesperado. Tente novamente.',
+      );
     }
   }
 }
@@ -133,22 +133,20 @@ class _ExpenseListBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedCategories =
-        context.select<ExpensesViewModel, Set<ExpenseCategory>>(
-      (vm) => vm.selectedCategories,
-    );
+    final selectedCategories = context
+        .select<ExpensesViewModel, Set<ExpenseCategory>>(
+          (vm) => vm.selectedCategories,
+        );
 
-    final presentCategories = data.expenses
-        .map((e) => e.category)
-        .toSet()
-        .toList()
-      ..sort((a, b) => a.index.compareTo(b.index));
+    final presentCategories =
+        data.expenses.map((e) => e.category).toSet().toList()
+          ..sort((a, b) => a.index.compareTo(b.index));
 
     final filtered = selectedCategories.isEmpty
         ? data.expenses
         : data.expenses
-            .where((e) => selectedCategories.contains(e.category))
-            .toList();
+              .where((e) => selectedCategories.contains(e.category))
+              .toList();
 
     final displayTotal = selectedCategories.isEmpty
         ? data.amountTotal
@@ -162,7 +160,7 @@ class _ExpenseListBody extends StatelessWidget {
           hPadding: hPadding,
           isDesktop: isDesktop,
         ),
-        if (presentCategories.length > 1)
+        if (presentCategories.isNotEmpty)
           _CategoryFilter(
             categories: presentCategories,
             selected: selectedCategories,
@@ -188,12 +186,12 @@ class _ExpenseListBody extends StatelessWidget {
                   ),
                 )
               : isDesktop
-                  ? _DesktopGrid(expenses: filtered, hPadding: hPadding)
-                  : _MobileList(
-                      expenses: filtered,
-                      hPadding: hPadding,
-                      onAddExpense: onAddExpense,
-                    ),
+              ? _DesktopList(expenses: filtered, hPadding: hPadding)
+              : _MobileList(
+                  expenses: filtered,
+                  hPadding: hPadding,
+                  onAddExpense: onAddExpense,
+                ),
         ),
       ],
     );
@@ -237,18 +235,53 @@ class _CategoryFilter extends StatelessWidget {
       height: 40,
       child: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(
-          dragDevices: {
-            PointerDeviceKind.touch,
-            PointerDeviceKind.mouse,
-          },
+          dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
         ),
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.symmetric(horizontal: hPadding),
-          itemCount: categories.length,
+          itemCount: categories.length + 1,
           separatorBuilder: (_, _) => const SizedBox(width: 8),
           itemBuilder: (_, index) {
-            final category = categories[index];
+            if (index == 0) {
+              final allSelected = selected.isEmpty;
+              return GestureDetector(
+                onTap: () =>
+                    context.read<ExpensesViewModel>().clearCategories(),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: allSelected
+                        ? AppColors.primary.withValues(alpha: 0.12)
+                        : AppColors.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: allSelected
+                          ? AppColors.primary
+                          : AppColors.surfaceDim,
+                      width: allSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Text(
+                    'Todos',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: allSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: allSelected
+                          ? AppColors.primary
+                          : AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              );
+            }
+            final category = categories[index - 1];
             return CategoryChip(
               category: category,
               selected: selected.contains(category),
@@ -282,37 +315,36 @@ class _Header extends StatelessWidget {
     );
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-          hPadding, isDesktop ? 32 : 20, hPadding, 16),
+      padding: EdgeInsets.fromLTRB(hPadding, isDesktop ? 32 : 20, hPadding, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (userName != null) ...[
             Text(
               'Olá, $userName',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: isDesktop ? null : 15,
-                  ),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                fontSize: isDesktop ? null : 15,
+              ),
             ),
             const SizedBox(height: 12),
           ],
           Text(
             'Despesas',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                  fontSize: isDesktop ? null : 14,
-                ),
+              color: AppColors.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+              fontSize: isDesktop ? null : 14,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             CurrencyFormatter.format(amountTotal),
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.onSurface,
-                  fontSize: isDesktop ? null : 32,
-                ),
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+              fontSize: isDesktop ? null : 32,
+            ),
           ),
         ],
       ),
@@ -367,12 +399,18 @@ class _MobileList extends StatelessWidget {
               destructive: true,
             ),
             onDismissed: (_) {
-              context.read<ExpensesViewModel>().deleteExpense(expense.id).catchError((_) {
-                if (context.mounted) {
-                  AppSnackBar.error(context, 'Erro ao excluir. Tente novamente.');
-                  context.read<ExpensesViewModel>().getExpenseList();
-                }
-              });
+              context
+                  .read<ExpensesViewModel>()
+                  .deleteExpense(expense.id)
+                  .catchError((_) {
+                    if (context.mounted) {
+                      AppSnackBar.error(
+                        context,
+                        'Erro ao excluir. Tente novamente.',
+                      );
+                      context.read<ExpensesViewModel>().getExpenseList();
+                    }
+                  });
             },
             child: _ExpenseItem(
               expense: expense,
@@ -385,28 +423,39 @@ class _MobileList extends StatelessWidget {
   }
 }
 
-class _DesktopGrid extends StatelessWidget {
+class _DesktopList extends StatelessWidget {
   final List<ExpenseModel> expenses;
   final double hPadding;
 
-  const _DesktopGrid({required this.expenses, required this.hPadding});
+  const _DesktopList({required this.expenses, required this.hPadding});
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
+    return ListView.builder(
       padding: EdgeInsets.fromLTRB(hPadding, 8, hPadding, 24),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisExtent: 76,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: expenses.length,
-      itemBuilder: (_, index) => _ExpenseItem(
-        expense: expenses[index],
-        onEdit: () => showEditExpenseSheet(context, expenses[index]),
-        onDelete: () => _confirmDelete(context, expenses[index]),
-      ),
+      itemCount: expenses.length + 1,
+      itemBuilder: (_, index) {
+        if (index == 0) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: Text(
+              'Transações Recentes',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          );
+        }
+        final expense = expenses[index - 1];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _ExpenseItem(
+            expense: expense,
+            onEdit: () => showEditExpenseSheet(context, expense),
+            onDelete: () => _confirmDelete(context, expense),
+          ),
+        );
+      },
     );
   }
 }
@@ -432,8 +481,7 @@ class _ExpenseItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CategoryChip(
-              category: expense.category, compact: true, selected: true),
+          _CategoryIcon(category: expense.category),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -451,7 +499,7 @@ class _ExpenseItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  DateFormatter.formatDate(expense.date),
+                  '${DateFormatter.formatDate(expense.date)} · ${expense.category.label}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.onSurfaceVariant,
@@ -493,5 +541,26 @@ class _ExpenseItem extends StatelessWidget {
     }
 
     return content;
+  }
+}
+
+class _CategoryIcon extends StatelessWidget {
+  final ExpenseCategory category;
+
+  const _CategoryIcon({required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    final index = ExpenseCategory.values.indexOf(category);
+    final color = AppColors.chartPalette[index % AppColors.chartPalette.length];
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(category.icon, size: 20, color: color),
+    );
   }
 }
