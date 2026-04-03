@@ -9,8 +9,11 @@ class ExpenseRepository {
     _http = http;
   }
 
-  Future<ExpenseListModel> getExpenseList() async {
-    final response = await _http.get("/expenses");
+  Future<ExpenseListModel> getExpenseList({String? month}) async {
+    final query = month != null
+        ? '/expenses?page_size=75&month=$month'
+        : '/expenses?page_size=75';
+    final response = await _http.get(query);
     return ExpenseListModel.fromMap(response.data);
   }
 

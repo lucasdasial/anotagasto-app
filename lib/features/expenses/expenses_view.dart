@@ -11,6 +11,7 @@ import 'package:anotagasto_app/core/widgets/category_chip.dart';
 import 'package:anotagasto_app/core/widgets/confirm_dialog.dart';
 import 'package:anotagasto_app/core/widgets/error_banner.dart';
 import 'package:anotagasto_app/features/expenses/expenses_view_model.dart';
+import 'package:anotagasto_app/features/analytics/widgets/month_selector.dart';
 import 'package:anotagasto_app/features/expenses/widgets/add_expense_sheet.dart'
     show showAddExpenseSheet, showEditExpenseSheet;
 import 'package:anotagasto_app/features/profile/profile_view_model.dart';
@@ -314,6 +315,14 @@ class _Header extends StatelessWidget {
           : null,
     );
 
+    final selectedMonth = context.select<ExpensesViewModel, DateTime>(
+      (vm) => vm.selectedMonth,
+    );
+
+    final now = DateTime.now();
+    final isCurrentMonth =
+        selectedMonth.year == now.year && selectedMonth.month == now.month;
+
     return Padding(
       padding: EdgeInsets.fromLTRB(hPadding, isDesktop ? 32 : 20, hPadding, 16),
       child: Column(
@@ -329,13 +338,23 @@ class _Header extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-          Text(
-            'Despesas',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-              fontSize: isDesktop ? null : 14,
-            ),
+          MonthSelector(
+            month: selectedMonth,
+            canGoNext: !isCurrentMonth,
+            onPrevious: () {
+              final prev = DateTime(
+                selectedMonth.year,
+                selectedMonth.month - 1,
+              );
+              context.read<ExpensesViewModel>().changeMonth(prev);
+            },
+            onNext: () {
+              final next = DateTime(
+                selectedMonth.year,
+                selectedMonth.month + 1,
+              );
+              context.read<ExpensesViewModel>().changeMonth(next);
+            },
           ),
           const SizedBox(height: 4),
           Text(

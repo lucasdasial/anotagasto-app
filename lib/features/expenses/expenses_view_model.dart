@@ -1,6 +1,7 @@
 import 'package:anotagasto_app/core/models/expense_category.dart';
 import 'package:anotagasto_app/core/models/expense_model.dart';
 import 'package:anotagasto_app/core/models/pagination_model.dart';
+import 'package:anotagasto_app/core/utils/date_formatter.dart';
 import 'package:anotagasto_app/core/view_state.dart';
 import 'package:anotagasto_app/features/expenses/expense_repository.dart';
 import 'package:dio/dio.dart';
@@ -14,6 +15,9 @@ class ExpensesViewModel extends ChangeNotifier {
   Set<ExpenseCategory> get selectedCategories =>
       Set.unmodifiable(_selectedCategories);
 
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  DateTime get selectedMonth => _selectedMonth;
+
   ExpensesViewModel(this.expenseRepository);
 
   Future<void> getExpenseList() async {
@@ -21,7 +25,11 @@ class ExpensesViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final expenses = await expenseRepository.getExpenseList();
+      final month = DateFormatter.toApiMonth(
+        _selectedMonth.year,
+        _selectedMonth.month,
+      );
+      final expenses = await expenseRepository.getExpenseList(month: month);
       viewState = SuccessStateView(expenses);
     } on DioException catch (e) {
       viewState = ErrorStateView(e.response?.data["error"] ?? e.message);
@@ -33,6 +41,12 @@ class ExpensesViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> changeMonth(DateTime month) async {
+    _selectedMonth = DateTime(month.year, month.month);
+    _selectedCategories.clear();
+    await getExpenseList();
   }
 
   /// Throws on error — caller is responsible for handling.
